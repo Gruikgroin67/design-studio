@@ -1,4 +1,26 @@
-/* DESIGNSTUDIO_ADMIN_CSS_V1 */
+/* DESIGNSTUDIO_ADMIN_CSS_V2 */
 .designstudio-admin {
   padding: 18px;
+}
+
+.designstudio-card {
+  max-width: 720px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.04);
+  border: 1px solid rgba(0,0,0,.10);
+}
+
+.designstudio-card h3 {
+  margin-top: 0;
+}
+
+.designstudio-result {
+  margin-top: 12px;
+  min-height: 80px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #1e1e1e;
+  color: #f1f1f1;
+  white-space: pre-wrap;
 }

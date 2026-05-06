@@ -6,7 +6,15 @@ if (!isConnect('admin')) {
 
 <div class="designstudio-admin">
   <h2>Design Studio</h2>
-  <p>Socle initial du plugin. Aucun Design n’est encore modifié.</p>
+
+  <div class="designstudio-card">
+    <h3>État du plugin</h3>
+    <p>Socle actif. Aucun Design n’est modifié à cette étape.</p>
+    <button type="button" class="btn btn-success" id="bt_designstudio_ping">
+      Test AJAX tactile
+    </button>
+    <pre id="designstudio_result" class="designstudio-result">En attente...</pre>
+  </div>
 </div>
 
 <link rel="stylesheet" href="plugins/designstudio/desktop/css/designstudio.css">
