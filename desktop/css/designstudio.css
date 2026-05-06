@@ -422,3 +422,22 @@
 .designstudio-grid-overlay.is-visible {
   display: block !important;
 }
+
+/* DESIGNSTUDIO_SAVE_POSITION_CSS_V1 */
+.designstudio-save-position-btn {
+  width: 100% !important;
+  height: 42px !important;
+  margin-top: 10px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: #1f7a42 !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+}
+
+.designstudio-save-position-btn:disabled {
+  opacity: .65 !important;
+  cursor: default !important;
+}

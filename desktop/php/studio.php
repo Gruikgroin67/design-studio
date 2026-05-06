@@ -77,6 +77,10 @@ try {
           <span></span>
         </div>
         <div class="designstudio-nudge-note">Déplacement non enregistré. Annuler recharge le Design.</div>
+        <button type="button" class="designstudio-save-position-btn" data-action="save-position">
+          Enregistrer position
+        </button>
+        <!-- DESIGNSTUDIO_SAVE_POSITION_UI_V1 -->
       </div>
 
       <div class="designstudio-line" id="designstudio_selected_info">Aucun objet sélectionné.</div>

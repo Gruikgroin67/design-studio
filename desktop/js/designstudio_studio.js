@@ -1,4 +1,4 @@
-/* DESIGNSTUDIO_STUDIO_JS_V5_IFRAME_GRID_AND_CLAMP */
+/* DESIGNSTUDIO_STUDIO_JS_V6_SAVE_POSITION */
 (function () {
   'use strict';
 
@@ -31,6 +31,11 @@
     } catch (e) {
       return null;
     }
+  }
+
+  function getPlanId() {
+    var root = qs('.designstudio-studio');
+    return root ? parseInt(root.getAttribute('data-plan-id') || '0', 10) : 0;
   }
 
   function openPanel() {
@@ -93,7 +98,67 @@
   }
 
   function getAttr(el, name) {
+    if (!el) return '';
     return el.getAttribute(name) || '';
+  }
+
+  function getAttrDeep(el, names) {
+    var current = el;
+    var guard = 0;
+
+    while (current && current.nodeType === 1 && guard < 6) {
+      for (var i = 0; i < names.length; i++) {
+        var value = current.getAttribute(names[i]);
+        if (value) return value;
+      }
+
+      current = current.parentElement;
+      guard++;
+    }
+
+    return '';
+  }
+
+  function getSelectedLinkInfo(el) {
+    if (!el) return null;
+
+    if (el.classList.contains('postitdesign-widget') || el.classList.contains('eqLogic-widget')) {
+      var eqId = getAttrDeep(el, ['data-eqlogic_id', 'data-eqlogic-id']);
+      if (eqId) {
+        return {
+          link_type: 'eqLogic',
+          link_id: parseInt(eqId, 10)
+        };
+      }
+    }
+
+    if (el.classList.contains('cmd-widget')) {
+      var cmdId = getAttrDeep(el, ['data-cmd_id', 'data-cmd-id']);
+      if (cmdId) {
+        return {
+          link_type: 'cmd',
+          link_id: parseInt(cmdId, 10)
+        };
+      }
+    }
+
+    var fallbackEq = getAttrDeep(el, ['data-eqlogic_id', 'data-eqlogic-id']);
+    if (fallbackEq) {
+      return {
+        link_type: 'eqLogic',
+        link_id: parseInt(fallbackEq, 10)
+      };
+    }
+
+    var fallbackCmd = getAttrDeep(el, ['data-cmd_id', 'data-cmd-id']);
+    if (fallbackCmd) {
+      return {
+        link_type: 'cmd',
+        link_id: parseInt(fallbackCmd, 10)
+      };
+    }
+
+    return null;
   }
 
   function getWidgets(doc) {
@@ -257,11 +322,6 @@
     grid.style.height = Math.round(rect.height) + 'px';
     grid.style.display = gridVisible ? 'block' : 'none';
 
-    grid.setAttribute(
-      'data-bounds',
-      Math.round(rect.left) + ',' + Math.round(rect.top) + ',' + Math.round(rect.width) + ',' + Math.round(rect.height)
-    );
-
     return true;
   }
 
@@ -334,6 +394,7 @@
     var rect = el.getBoundingClientRect();
     var style = el.ownerDocument.defaultView.getComputedStyle(el);
     var moved = el.getAttribute('data-designstudio-visual-moved') === '1';
+    var linkInfo = getSelectedLinkInfo(el);
 
     var html = '';
     html += '<div class="designstudio-selected-title">Objet sélectionné</div>';
@@ -342,8 +403,7 @@
     html += '<div class="designstudio-kv"><b>Position écran</b><span>x=' + Math.round(rect.left) + ', y=' + Math.round(rect.top) + '</span></div>';
     html += '<div class="designstudio-kv"><b>Taille</b><span>' + Math.round(rect.width) + ' × ' + Math.round(rect.height) + ' px</span></div>';
     html += '<div class="designstudio-kv"><b>CSS left/top</b><span>' + (style.left || '—') + ' / ' + (style.top || '—') + '</span></div>';
-    html += '<div class="designstudio-kv"><b>eqLogic ID</b><span>' + (getAttr(el, 'data-eqlogic_id') || getAttr(el, 'data-eqlogic-id') || '—') + '</span></div>';
-    html += '<div class="designstudio-kv"><b>cmd ID</b><span>' + (getAttr(el, 'data-cmd_id') || getAttr(el, 'data-cmd-id') || '—') + '</span></div>';
+    html += '<div class="designstudio-kv"><b>Lien Jeedom</b><span>' + (linkInfo ? linkInfo.link_type + ' #' + linkInfo.link_id : 'Non détecté') + '</span></div>';
     html += '<div class="designstudio-kv"><b>Classes</b><span>' + escapeHtml(el.className || '—') + '</span></div>';
     html += '<div class="designstudio-kv"><b>Déplacé</b><span>' + (moved ? 'Oui, visuel uniquement' : 'Non') + '</span></div>';
 
@@ -434,6 +494,29 @@
     openPanel();
   }
 
+  function calculateRelativePosition(el) {
+    var doc = iframeDocument();
+    if (!doc || !el) return null;
+
+    var surface = findDesignSurface(doc);
+    if (!surface) return null;
+
+    var rect = normalizedRect(el.getBoundingClientRect());
+
+    var left = Math.round(rect.left - surface.left);
+    var top = Math.round(rect.top - surface.top);
+
+    left = Math.max(0, Math.min(left, Math.round(surface.width - rect.width)));
+    top = Math.max(0, Math.min(top, Math.round(surface.height - rect.height)));
+
+    return {
+      left: left,
+      top: top,
+      width: Math.round(rect.width),
+      height: Math.round(rect.height)
+    };
+  }
+
   function clampDeltaToDesign(el, dx, dy) {
     var doc = iframeDocument();
     if (!doc || !el) return { dx: dx, dy: dy, blocked: false };
@@ -506,6 +589,79 @@
     }
   }
 
+  function saveSelectedPosition() {
+    if (!selectedElement) {
+      writeScan('Aucun objet sélectionné.');
+      openPanel();
+      return;
+    }
+
+    var linkInfo = getSelectedLinkInfo(selectedElement);
+    if (!linkInfo || !linkInfo.link_id || !linkInfo.link_type) {
+      writeScan('Impossible d’enregistrer : lien Jeedom non détecté.');
+      openPanel();
+      return;
+    }
+
+    var pos = calculateRelativePosition(selectedElement);
+    if (!pos) {
+      writeScan('Impossible d’enregistrer : position relative introuvable.');
+      openPanel();
+      return;
+    }
+
+    var btn = qs('[data-action="save-position"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Enregistrement...';
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: 'plugins/designstudio/core/ajax/designstudio.ajax.php',
+      data: {
+        action: 'savePosition',
+        plan_id: getPlanId(),
+        link_type: linkInfo.link_type,
+        link_id: linkInfo.link_id,
+        left: pos.left,
+        top: pos.top,
+        width: pos.width,
+        height: pos.height
+      },
+      dataType: 'json',
+      cache: false,
+      global: false,
+      success: function (response) {
+        selectedElement.setAttribute('data-designstudio-visual-moved', '0');
+
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Position enregistrée';
+          window.setTimeout(function () {
+            btn.textContent = 'Enregistrer position';
+          }, 1500);
+        }
+
+        writeScan('Position enregistrée : left=' + pos.left + ', top=' + pos.top + '. Recharge pour vérifier.');
+        showSelectedInfo(selectedElement);
+        openPanel();
+      },
+      error: function (xhr) {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Erreur enregistrement';
+          window.setTimeout(function () {
+            btn.textContent = 'Enregistrer position';
+          }, 1800);
+        }
+
+        writeScan('Erreur enregistrement : ' + (xhr && xhr.responseText ? xhr.responseText.slice(0, 220) : 'réponse vide'));
+        openPanel();
+      }
+    });
+  }
+
   function reloadFrame() {
     var iframe = iframeElement();
 
@@ -533,6 +689,7 @@
         if (action === 'scan') scanDesign();
         if (action === 'grid') toggleGrid();
         if (action === 'reload') reloadFrame();
+        if (action === 'save-position') saveSelectedPosition();
 
         return false;
       }, false);
