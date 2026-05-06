@@ -1,0 +1,15 @@
+{
+  "id": "designstudio",
+  "name": "Design Studio",
+  "description": "Outils modernes pour les Designs Jeedom",
+  "licence": "AGPL",
+  "author": "Emmanuel",
+  "require": "4.4",
+  "category": "programming",
+  "hasDependency": false,
+  "hasOwnDeamon": false,
+  "maxDependancyInstallTime": 0,
+  "changelog": "docs/fr_FR/changelog.md",
+  "documentation": "docs/fr_FR/index.md",
+  "language": ["fr_FR"]
+}
