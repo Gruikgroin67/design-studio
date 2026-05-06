@@ -2,6 +2,9 @@
 if (!isConnect('admin')) {
     throw new Exception('{{401 - Accès non autorisé}}');
 }
+
+include_file('desktop', 'designstudio', 'css', 'designstudio');
+include_file('desktop', 'designstudio', 'js', 'designstudio');
 ?>
 
 <div class="designstudio-admin">
@@ -9,13 +12,16 @@ if (!isConnect('admin')) {
 
   <div class="designstudio-card">
     <h3>État du plugin</h3>
-    <p>Socle actif. Aucun Design n’est modifié à cette étape.</p>
-    <button type="button" class="btn btn-success" id="bt_designstudio_ping">
-      Test AJAX tactile
+    <p>Page admin légère. Aucun Design n’est modifié.</p>
+
+    <button type="button" class="btn btn-primary" id="bt_designstudio_js">
+      Test JS local
     </button>
-    <pre id="designstudio_result" class="designstudio-result">En attente...</pre>
+
+    <button type="button" class="btn btn-success" id="bt_designstudio_ping">
+      Test AJAX
+    </button>
+
+    <pre id="designstudio_result" class="designstudio-result">Page chargée.</pre>
   </div>
 </div>
-
-<link rel="stylesheet" href="plugins/designstudio/desktop/css/designstudio.css">
-<script src="plugins/designstudio/desktop/js/designstudio.js"></script>

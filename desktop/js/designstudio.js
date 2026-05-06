@@ -1,71 +1,10 @@
-/* DESIGNSTUDIO_ADMIN_JS_V3 */
+/* DESIGNSTUDIO_ADMIN_JS_V4_SAFE */
 (function () {
   'use strict';
 
-  console.log('[DesignStudio] JS loaded');
-
-  function stopEvent(ev) {
-    if (!ev) return false;
-
-    try { ev.preventDefault(); } catch (e) {}
-    try { ev.stopPropagation(); } catch (e) {}
-    try { ev.stopImmediatePropagation(); } catch (e) {}
-
-    return false;
-  }
-
-  function bindTouchSafe(el, handler) {
-    if (!el || typeof handler !== 'function') {
-      return;
-    }
-
-    var locked = false;
-
-    var run = function (ev) {
-      stopEvent(ev);
-
-      if (locked) {
-        return false;
-      }
-
-      locked = true;
-
-      window.setTimeout(function () {
-        locked = false;
-      }, 450);
-
-      handler(ev);
-
-      return false;
-    };
-
-    [
-      'click',
-      'touchend',
-      'pointerup'
-    ].forEach(function (evt) {
-      try {
-        el.addEventListener(evt, run, {
-          capture: true,
-          passive: false
-        });
-      } catch (e) {
-        el.addEventListener(evt, run, true);
-      }
-    });
-  }
-
-  function resultNode() {
-    return document.getElementById('designstudio_result');
-  }
-
   function writeResult(value) {
-    var node = resultNode();
-
-    if (!node) {
-      console.warn('[DesignStudio] result node not found');
-      return;
-    }
+    var node = document.getElementById('designstudio_result');
+    if (!node) return;
 
     if (typeof value !== 'string') {
       try {
@@ -78,10 +17,26 @@
     node.textContent = value;
   }
 
-  function ping() {
-    console.log('[DesignStudio] ping start');
+  function bindSimple(id, fn) {
+    var el = document.getElementById(id);
+    if (!el) return;
 
-    writeResult('Chargement AJAX...');
+    el.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      fn();
+    }, false);
+  }
+
+  function ajaxPing() {
+    writeResult('Test AJAX en cours...');
+
+    var done = false;
+
+    var timer = window.setTimeout(function () {
+      if (done) return;
+      done = true;
+      writeResult('ERREUR: timeout AJAX après 5 secondes.');
+    }, 5000);
 
     $.ajax({
       type: 'POST',
@@ -92,42 +47,37 @@
       dataType: 'json',
       cache: false,
       global: false,
-
       success: function (response) {
-        console.log('[DesignStudio] ajax success', response);
-
+        if (done) return;
+        done = true;
+        window.clearTimeout(timer);
         writeResult({
           ajax: 'success',
           response: response
         });
       },
-
       error: function (xhr, status, error) {
-        console.error('[DesignStudio] ajax error', status, error);
-
+        if (done) return;
+        done = true;
+        window.clearTimeout(timer);
         writeResult({
           ajax: 'error',
           status: status,
           error: error,
-          responseText: xhr && xhr.responseText ? xhr.responseText : null
+          responseText: xhr && xhr.responseText ? xhr.responseText : ''
         });
       }
     });
   }
 
   function boot() {
-    console.log('[DesignStudio] boot');
+    writeResult('JS chargé correctement.');
 
-    var btn = document.getElementById('bt_designstudio_ping');
+    bindSimple('bt_designstudio_js', function () {
+      writeResult('OK: clic JS local fonctionnel.');
+    });
 
-    if (!btn) {
-      console.warn('[DesignStudio] button not found');
-      return;
-    }
-
-    bindTouchSafe(btn, ping);
-
-    writeResult('Design Studio prêt.');
+    bindSimple('bt_designstudio_ping', ajaxPing);
   }
 
   if (document.readyState === 'loading') {
@@ -135,5 +85,4 @@
   } else {
     boot();
   }
-
 })();
