@@ -29,3 +29,17 @@
   color: #f1f1f1;
   white-space: pre-wrap;
 }
+
+/* DESIGNSTUDIO_ADMIN_BUTTON_FIX_V1 */
+.designstudio-card .designstudio-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 36px !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  line-height: 36px !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  transform: none !important;
+}

@@ -14,11 +14,11 @@ include_file('desktop', 'designstudio', 'js', 'designstudio');
     <h3>État du plugin</h3>
     <p>Page admin légère. Aucun Design n’est modifié.</p>
 
-    <button type="button" class="btn btn-primary" id="bt_designstudio_js">
+    <button type="button" class="btn btn-primary designstudio-btn" id="bt_designstudio_js">
       Test JS local
     </button>
 
-    <button type="button" class="btn btn-success" id="bt_designstudio_ping">
+    <button type="button" class="btn btn-success designstudio-btn" id="bt_designstudio_ping">
       Test AJAX
     </button>
 
