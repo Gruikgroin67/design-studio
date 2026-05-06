@@ -1,5 +1,5 @@
 <?php
-/* DESIGNSTUDIO_CLASS_V2_OVERLAY_BASE */
+/* DESIGNSTUDIO_CLASS_V3_STUDIO_PAGE */
 
 class designstudio extends eqLogic {
 }

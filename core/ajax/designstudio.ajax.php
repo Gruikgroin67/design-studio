@@ -9,20 +9,11 @@ try {
 
     ajax::init();
 
-    if (init('action') == 'setOverlayEnabled') {
-        $enabled = intval(init('enabled')) == 1 ? 1 : 0;
-        config::save('overlay_enabled', $enabled, 'designstudio');
-
+    if (init('action') == 'ping') {
         ajax::success(array(
             'ok' => true,
-            'overlay_enabled' => $enabled
-        ));
-    }
-
-    if (init('action') == 'getOverlayState') {
-        ajax::success(array(
-            'ok' => true,
-            'overlay_enabled' => intval(config::byKey('overlay_enabled', 'designstudio', 1))
+            'plugin' => 'designstudio',
+            'mode' => 'studio_page'
         ));
     }
 

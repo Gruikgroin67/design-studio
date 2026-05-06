@@ -1,4 +1,4 @@
-/* DESIGNSTUDIO_ADMIN_CSS_V6_OVERLAY_SETTINGS */
+/* DESIGNSTUDIO_CSS_V10_REAL_STUDIO_PAGE */
 .designstudio-admin {
   padding: 24px !important;
   max-width: 1180px !important;
@@ -26,7 +26,8 @@
   gap: 16px !important;
 }
 
-.designstudio-card {
+.designstudio-card,
+.designstudio-design-card {
   padding: 18px !important;
   border-radius: 14px !important;
   background: #ffffff !important;
@@ -51,20 +52,240 @@
   opacity: .65 !important;
 }
 
-.designstudio-admin-btn {
-  height: 38px !important;
-  padding: 0 16px !important;
-  border: 0 !important;
-  border-radius: 10px !important;
+.designstudio-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(46, 204, 113, .12) !important;
+  color: #1f7a42 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.designstudio-dot {
+  width: 9px !important;
+  height: 9px !important;
+  border-radius: 50% !important;
+  background: #2ecc71 !important;
+  display: inline-block !important;
+}
+
+.designstudio-section {
+  margin-top: 22px !important;
+}
+
+.designstudio-section-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 12px !important;
+}
+
+.designstudio-section-title h3 {
+  margin: 0 !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+}
+
+.designstudio-design-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.designstudio-design-card {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+}
+
+.designstudio-design-name {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+.designstudio-design-meta {
+  margin-top: 4px !important;
+  font-size: 12px !important;
+  opacity: .6 !important;
+}
+
+.designstudio-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.designstudio-open-link,
+.designstudio-plain-link,
+.designstudio-toplink {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 34px !important;
+  padding: 0 12px !important;
+  border-radius: 9px !important;
+  text-decoration: none !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  white-space: nowrap !important;
+}
+
+.designstudio-open-link {
+  background: #2f80ed !important;
   color: #fff !important;
+}
+
+.designstudio-plain-link,
+.designstudio-toplink {
+  background: rgba(0,0,0,.08) !important;
+  color: #333 !important;
+}
+
+.designstudio-empty {
+  padding: 16px !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  border: 1px dashed rgba(0,0,0,.25) !important;
+}
+
+/* Page Studio */
+.designstudio-studio {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  background: #202124 !important;
+  color: #fff !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.designstudio-studio-topbar {
+  height: 56px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 16px !important;
+  background: #111 !important;
+  border-bottom: 1px solid rgba(255,255,255,.12) !important;
+  box-sizing: border-box !important;
+}
+
+.designstudio-studio-topbar span {
+  margin-left: 10px !important;
+  opacity: .75 !important;
+}
+
+.designstudio-studio-actions {
+  display: inline-flex !important;
+  gap: 8px !important;
+}
+
+.designstudio-studio-framewrap {
+  position: absolute !important;
+  top: 56px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+.designstudio-iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  background: #e5e5e5 !important;
+}
+
+.designstudio-dock {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 24px !important;
+  transform: translateX(-50%) !important;
+  display: flex !important;
+  gap: 8px !important;
+  padding: 8px !important;
+  border-radius: 18px !important;
+  background: rgba(22,22,22,.90) !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.35) !important;
+  z-index: 10002 !important;
+}
+
+.designstudio-dock-btn {
+  height: 44px !important;
+  min-width: 74px !important;
+  border: 0 !important;
+  border-radius: 13px !important;
+  background: rgba(255,255,255,.16) !important;
+  color: #fff !important;
+  font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
 }
 
-.designstudio-admin-btn.is-on {
-  background: #1f7a42 !important;
+.designstudio-sidepanel {
+  position: fixed !important;
+  top: 56px !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 360px !important;
+  max-width: 88vw !important;
+  background: rgba(245,245,245,.98) !important;
+  color: #222 !important;
+  box-shadow: -12px 0 34px rgba(0,0,0,.25) !important;
+  z-index: 10003 !important;
+  transform: translateX(110%) !important;
+  transition: transform .22s ease !important;
 }
 
-.designstudio-admin-btn.is-off {
-  background: #777 !important;
+.designstudio-sidepanel.is-open {
+  transform: translateX(0) !important;
+}
+
+.designstudio-sidepanel-head {
+  height: 58px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 16px !important;
+  border-bottom: 1px solid rgba(0,0,0,.12) !important;
+  font-size: 18px !important;
+}
+
+.designstudio-close {
+  width: 38px !important;
+  height: 38px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: rgba(0,0,0,.08) !important;
+  font-size: 24px !important;
+  cursor: pointer !important;
+}
+
+.designstudio-sidepanel-body {
+  padding: 16px !important;
+}
+
+.designstudio-line {
+  padding: 10px 0 !important;
+  border-bottom: 1px solid rgba(0,0,0,.08) !important;
+  font-size: 14px !important;
+}
+
+.designstudio-grid-overlay {
+  display: none !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 10001 !important;
+  background-image:
+    linear-gradient(rgba(47,128,237,.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47,128,237,.22) 1px, transparent 1px) !important;
+  background-size: 24px 24px !important;
+}
+
+.designstudio-grid-overlay.is-visible {
+  display: block !important;
 }
