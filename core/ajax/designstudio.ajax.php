@@ -9,12 +9,18 @@ try {
 
     ajax::init();
 
-    if (init('action') == 'ping') {
+    if (init('action') == 'prepareToolbar') {
+        $plan_id = intval(init('plan_id'));
+        if ($plan_id <= 0) {
+            throw new Exception(__('ID Design invalide', __FILE__));
+        }
+
+        config::save('toolbar_prepared_' . $plan_id, 1, 'designstudio');
+
         ajax::success(array(
             'ok' => true,
-            'plugin' => 'designstudio',
-            'message' => 'AJAX Design Studio OK',
-            'time' => date('Y-m-d H:i:s')
+            'plan_id' => $plan_id,
+            'prepared' => true
         ));
     }
 

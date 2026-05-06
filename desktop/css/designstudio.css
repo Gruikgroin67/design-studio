@@ -155,3 +155,37 @@
   border: 1px dashed rgba(0,0,0,.25) !important;
   opacity: .75 !important;
 }
+
+/* DESIGNSTUDIO_PREPARE_TOOLBAR_V1 */
+.designstudio-design-state {
+  margin-top: 5px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #777 !important;
+}
+
+.designstudio-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.designstudio-prepare-btn {
+  height: 34px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: #1f7a42 !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+.designstudio-prepare-btn.is-ready,
+.designstudio-prepare-btn:disabled {
+  background: #777 !important;
+  cursor: default !important;
+}

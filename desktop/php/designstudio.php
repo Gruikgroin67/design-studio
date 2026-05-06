@@ -68,13 +68,28 @@ try {
               <div class="designstudio-design-meta">
                 ID Design : <?php echo $design['id']; ?>
               </div>
+              <div class="designstudio-design-state">
+                <?php if (config::byKey('toolbar_prepared_' . $design['id'], 'designstudio', 0) == 1) { ?>
+                  Toolbar préparée
+                <?php } else { ?>
+                  Toolbar non préparée
+                <?php } ?>
+              </div>
             </div>
 
-            <a class="designstudio-open-link"
-               href="index.php?v=d&p=plan&plan_id=<?php echo $design['id']; ?>"
-               target="_blank">
-              Ouvrir
-            </a>
+            <div class="designstudio-actions">
+              <button type="button"
+                      class="designstudio-prepare-btn"
+                      data-plan-id="<?php echo $design['id']; ?>">
+                Préparer toolbar
+              </button>
+
+              <a class="designstudio-open-link"
+                 href="index.php?v=d&p=plan&plan_id=<?php echo $design['id']; ?>"
+                 target="_blank">
+                Ouvrir
+              </a>
+            </div>
           </div>
         <?php } ?>
       </div>
