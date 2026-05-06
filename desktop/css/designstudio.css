@@ -349,3 +349,39 @@
   font-size: 12px !important;
   opacity: .65 !important;
 }
+
+/* DESIGNSTUDIO_PANEL_SCROLL_FIX_V1 */
+.designstudio-sidepanel {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.designstudio-sidepanel-head {
+  flex: 0 0 58px !important;
+}
+
+.designstudio-sidepanel-body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: calc(100vh - 114px) !important;
+  padding-bottom: 140px !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.designstudio-nudge-block {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2 !important;
+  background: rgba(245,245,245,.98) !important;
+  border-bottom: 2px solid rgba(0,0,0,.12) !important;
+}
+
+.designstudio-nudge-grid {
+  grid-template-columns: 48px 76px 48px !important;
+}
+
+.designstudio-nudge-grid button {
+  height: 42px !important;
+}

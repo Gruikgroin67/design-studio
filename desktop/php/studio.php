@@ -59,10 +59,9 @@ try {
       <div class="designstudio-line">Studio actif sur : <?php echo htmlspecialchars($planName); ?></div>
       <div class="designstudio-line" id="designstudio_scan_result">Scan non lancé</div>
       <div class="designstudio-line">Clique Scan, puis clique un objet du Design.</div>
-      <div class="designstudio-line" id="designstudio_selected_info">Aucun objet sélectionné.</div>
 
       <div class="designstudio-line designstudio-nudge-block">
-        <!-- DESIGNSTUDIO_VISUAL_NUDGE_UI_V1 -->
+        <!-- DESIGNSTUDIO_VISUAL_NUDGE_UI_V2_TOP -->
         <div class="designstudio-tool-title">Déplacement visuel</div>
         <div class="designstudio-nudge-grid">
           <span></span>
@@ -79,6 +78,8 @@ try {
         </div>
         <div class="designstudio-nudge-note">Déplacement non enregistré. Annuler recharge le Design.</div>
       </div>
+
+      <div class="designstudio-line" id="designstudio_selected_info">Aucun objet sélectionné.</div>
     </div>
   </div>
 </div>
