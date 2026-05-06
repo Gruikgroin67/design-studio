@@ -1,4 +1,4 @@
-/* DESIGNSTUDIO_STUDIO_JS_V3_OBJECT_SELECTION_AND_VISUAL_NUDGE */
+/* DESIGNSTUDIO_STUDIO_JS_V4_GRID_LIMIT_AND_CLAMP */
 (function () {
   'use strict';
 
@@ -24,7 +24,6 @@
   function iframeDocument() {
     var iframe = iframeElement();
     if (!iframe || !iframe.contentWindow) return null;
-
     try {
       return iframe.contentWindow.document;
     } catch (e) {
@@ -52,22 +51,19 @@
     if (selected) selected.innerHTML = html;
   }
 
-  function ensureSelectionBox(doc) {
-    var box = doc.getElementById('designstudio-selection-box');
-    if (box) return box;
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
-    box = doc.createElement('div');
-    box.id = 'designstudio-selection-box';
-    box.style.position = 'absolute';
-    box.style.zIndex = '2147482000';
-    box.style.pointerEvents = 'none';
-    box.style.border = '3px solid #2f80ed';
-    box.style.borderRadius = '8px';
-    box.style.boxShadow = '0 0 0 9999px rgba(47,128,237,.06)';
-    box.style.display = 'none';
-
-    doc.body.appendChild(box);
-    return box;
+  function pxToNumber(value, fallback) {
+    var n = parseFloat(value);
+    if (isNaN(n)) return fallback;
+    return n;
   }
 
   function getCleanText(el) {
@@ -87,19 +83,185 @@
     return el.getAttribute(name) || '';
   }
 
-  function escapeHtml(text) {
-    return String(text)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+  function getWidgets(doc) {
+    if (!doc) return [];
+    return Array.prototype.slice.call(
+      doc.querySelectorAll('.postitdesign-widget, .eqLogic-widget, .cmd-widget')
+    ).filter(function (el) {
+      return el && el.id !== 'designstudio-selection-box';
+    });
   }
 
-  function pxToNumber(value, fallback) {
-    var n = parseFloat(value);
-    if (isNaN(n)) return fallback;
-    return n;
+  function rectContainsCenter(containerRect, widgetRect) {
+    var cx = widgetRect.left + widgetRect.width / 2;
+    var cy = widgetRect.top + widgetRect.height / 2;
+
+    return (
+      cx >= containerRect.left &&
+      cx <= containerRect.right &&
+      cy >= containerRect.top &&
+      cy <= containerRect.bottom
+    );
+  }
+
+  function normalizedRect(r) {
+    return {
+      left: r.left,
+      top: r.top,
+      right: r.left + r.width,
+      bottom: r.top + r.height,
+      width: r.width,
+      height: r.height
+    };
+  }
+
+  function findDesignSurface(doc) {
+    if (!doc) return null;
+
+    var widgets = getWidgets(doc);
+    var candidates = [];
+
+    var preferredSelectors = [
+      '#div_displayObject',
+      '.div_displayObject',
+      '#div_pageContainer',
+      '.div_pageContainer',
+      '#div_planContainer',
+      '.div_planContainer',
+      '.planContainer',
+      '#planContainer'
+    ];
+
+    preferredSelectors.forEach(function (sel) {
+      var el = doc.querySelector(sel);
+      if (!el) return;
+      var r = normalizedRect(el.getBoundingClientRect());
+      if (r.width >= 180 && r.height >= 180) {
+        candidates.push({ el: el, rect: r, priority: 0 });
+      }
+    });
+
+    Array.prototype.slice.call(doc.querySelectorAll('div')).forEach(function (el) {
+      if (!el || el.id === 'designstudio-selection-box') return;
+
+      var r = normalizedRect(el.getBoundingClientRect());
+      if (r.width < 180 || r.height < 180) return;
+
+      var style = doc.defaultView.getComputedStyle(el);
+      var bg = style.backgroundColor || '';
+
+      var hasVisibleBg = (
+        bg &&
+        bg !== 'transparent' &&
+        bg !== 'rgba(0, 0, 0, 0)' &&
+        bg !== 'rgb(255, 255, 255)'
+      );
+
+      if (!hasVisibleBg && widgets.length > 0) return;
+
+      candidates.push({ el: el, rect: r, priority: hasVisibleBg ? 1 : 2 });
+    });
+
+    if (widgets.length > 0) {
+      candidates = candidates.filter(function (c) {
+        var contained = 0;
+
+        widgets.forEach(function (w) {
+          var wr = normalizedRect(w.getBoundingClientRect());
+          if (rectContainsCenter(c.rect, wr)) contained++;
+        });
+
+        return contained >= Math.max(1, Math.ceil(widgets.length * 0.66));
+      });
+    }
+
+    candidates = candidates.filter(function (c) {
+      var viewportW = doc.defaultView.innerWidth || 0;
+      var viewportH = doc.defaultView.innerHeight || 0;
+
+      if (viewportW > 0 && c.rect.width > viewportW * 0.98 && c.rect.height > viewportH * 0.90) {
+        return false;
+      }
+
+      return true;
+    });
+
+    candidates.sort(function (a, b) {
+      var areaA = a.rect.width * a.rect.height;
+      var areaB = b.rect.width * b.rect.height;
+
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      return areaA - areaB;
+    });
+
+    if (candidates.length > 0) {
+      return candidates[0].rect;
+    }
+
+    if (widgets.length > 0) {
+      var minX = Infinity;
+      var minY = Infinity;
+      var maxX = -Infinity;
+      var maxY = -Infinity;
+
+      widgets.forEach(function (el) {
+        var r = normalizedRect(el.getBoundingClientRect());
+        minX = Math.min(minX, r.left);
+        minY = Math.min(minY, r.top);
+        maxX = Math.max(maxX, r.right);
+        maxY = Math.max(maxY, r.bottom);
+      });
+
+      var margin = 40;
+      return {
+        left: Math.max(0, minX - margin),
+        top: Math.max(0, minY - margin),
+        right: maxX + margin,
+        bottom: maxY + margin,
+        width: Math.max(220, maxX - minX + margin * 2),
+        height: Math.max(220, maxY - minY + margin * 2)
+      };
+    }
+
+    return null;
+  }
+
+  function updateGridBounds() {
+    var grid = qs('#designstudio_grid_overlay');
+    var doc = iframeDocument();
+
+    if (!grid || !doc) return false;
+
+    var rect = findDesignSurface(doc);
+    if (!rect) {
+      writeScan('Grille : zone Design introuvable.');
+      return false;
+    }
+
+    grid.style.left = Math.round(rect.left) + 'px';
+    grid.style.top = Math.round(rect.top) + 'px';
+    grid.style.width = Math.round(rect.width) + 'px';
+    grid.style.height = Math.round(rect.height) + 'px';
+
+    return true;
+  }
+
+  function ensureSelectionBox(doc) {
+    var box = doc.getElementById('designstudio-selection-box');
+    if (box) return box;
+
+    box = doc.createElement('div');
+    box.id = 'designstudio-selection-box';
+    box.style.position = 'absolute';
+    box.style.zIndex = '2147482000';
+    box.style.pointerEvents = 'none';
+    box.style.border = '3px solid #2f80ed';
+    box.style.borderRadius = '8px';
+    box.style.boxShadow = '0 0 0 9999px rgba(47,128,237,.06)';
+    box.style.display = 'none';
+
+    doc.body.appendChild(box);
+    return box;
   }
 
   function updateSelectionBox(el) {
@@ -152,7 +314,17 @@
 
   function findStudioTarget(start) {
     if (!start || !start.closest) return null;
-    return start.closest('.postitdesign-widget, .eqLogic-widget, .cmd-widget');
+
+    var postit = start.closest('.postitdesign-widget');
+    if (postit) return postit;
+
+    var eq = start.closest('.eqLogic-widget');
+    if (eq) return eq;
+
+    var cmd = start.closest('.cmd-widget');
+    if (cmd) return cmd;
+
+    return null;
   }
 
   function installSelectionHandlers() {
@@ -211,15 +383,67 @@
     var cmd = doc.querySelectorAll('.cmd-widget').length;
     var postit = doc.querySelectorAll('.postitdesign-widget').length;
 
+    updateGridBounds();
     writeScan(eq + ' widget(s), ' + cmd + ' commande(s), ' + postit + ' post-it détecté(s). Sélection activée.');
     installSelectionHandlers();
     openPanel();
+  }
+
+  function clampDeltaToDesign(el, dx, dy) {
+    var doc = iframeDocument();
+    if (!doc || !el) return { dx: dx, dy: dy, blocked: false };
+
+    var surface = findDesignSurface(doc);
+    if (!surface) return { dx: dx, dy: dy, blocked: false };
+
+    var r = normalizedRect(el.getBoundingClientRect());
+
+    var newLeft = r.left + dx;
+    var newTop = r.top + dy;
+    var newRight = r.right + dx;
+    var newBottom = r.bottom + dy;
+
+    var clampedDx = dx;
+    var clampedDy = dy;
+
+    if (newLeft < surface.left) {
+      clampedDx += surface.left - newLeft;
+    }
+
+    if (newRight > surface.right) {
+      clampedDx -= newRight - surface.right;
+    }
+
+    if (newTop < surface.top) {
+      clampedDy += surface.top - newTop;
+    }
+
+    if (newBottom > surface.bottom) {
+      clampedDy -= newBottom - surface.bottom;
+    }
+
+    return {
+      dx: clampedDx,
+      dy: clampedDy,
+      blocked: clampedDx !== dx || clampedDy !== dy
+    };
   }
 
   function nudgeSelected(dx, dy) {
     if (!selectedElement) {
       writeSelectedHtml('Aucun objet sélectionné. Clique Scan puis sélectionne un objet.');
       openPanel();
+      return;
+    }
+
+    var clamp = clampDeltaToDesign(selectedElement, dx, dy);
+    dx = clamp.dx;
+    dy = clamp.dy;
+
+    if (dx === 0 && dy === 0) {
+      updateSelectionBox(selectedElement);
+      showSelectedInfo(selectedElement);
+      writeScan('Limite du Design atteinte. Déplacement bloqué.');
       return;
     }
 
@@ -238,89 +462,33 @@
     selectedElement.setAttribute('data-designstudio-visual-moved', '1');
 
     updateSelectionBox(selectedElement);
+    updateGridBounds();
     showSelectedInfo(selectedElement);
-    writeScan('Déplacement visuel : ' + dx + ' / ' + dy + ' px. Non enregistré.');
-  }
 
-  function findDesignSurface(doc) {
-    if (!doc) return null;
-
-    var selectors = [
-      '.div_displayObject',
-      '#div_displayObject',
-      '.planContainer',
-      '#div_pageContainer',
-      '#div_planContainer',
-      '.planHeader',
-      '.plan'
-    ];
-
-    for (var i = 0; i < selectors.length; i++) {
-      var el = doc.querySelector(selectors[i]);
-      if (!el) continue;
-
-      var r = el.getBoundingClientRect();
-      if (r.width > 150 && r.height > 150) {
-        return el;
-      }
+    if (clamp.blocked) {
+      writeScan('Déplacement limité au bord du Design : ' + dx + ' / ' + dy + ' px. Non enregistré.');
+    } else {
+      writeScan('Déplacement visuel : ' + dx + ' / ' + dy + ' px. Non enregistré.');
     }
-
-    var widgets = Array.prototype.slice.call(doc.querySelectorAll('.eqLogic-widget, .cmd-widget, .postitdesign-widget'));
-    if (!widgets.length) return null;
-
-    var minX = Infinity;
-    var minY = Infinity;
-    var maxX = -Infinity;
-    var maxY = -Infinity;
-
-    widgets.forEach(function (el) {
-      var r = el.getBoundingClientRect();
-      minX = Math.min(minX, r.left);
-      minY = Math.min(minY, r.top);
-      maxX = Math.max(maxX, r.right);
-      maxY = Math.max(maxY, r.bottom);
-    });
-
-    return {
-      getBoundingClientRect: function () {
-        return {
-          left: minX,
-          top: minY,
-          width: Math.max(220, maxX - minX),
-          height: Math.max(220, maxY - minY)
-        };
-      }
-    };
-  }
-
-  function updateGridBounds() {
-    var grid = qs('#designstudio_grid_overlay');
-    var doc = iframeDocument();
-
-    if (!grid || !doc) return false;
-
-    var surface = findDesignSurface(doc);
-    if (!surface) return false;
-
-    var rect = surface.getBoundingClientRect();
-
-    grid.style.left = Math.round(rect.left) + 'px';
-    grid.style.top = Math.round(rect.top) + 'px';
-    grid.style.width = Math.round(rect.width) + 'px';
-    grid.style.height = Math.round(rect.height) + 'px';
-
-    return true;
   }
 
   function toggleGrid() {
     var grid = qs('#designstudio_grid_overlay');
     if (!grid) return;
 
-    updateGridBounds();
+    var ok = updateGridBounds();
+
+    if (!ok) {
+      grid.classList.remove('is-visible');
+      return;
+    }
+
     grid.classList.toggle('is-visible');
 
     if (grid.classList.contains('is-visible')) {
-      writeScan('Grille limitée à la zone du Design.');
+      writeScan('Grille limitée à la zone réelle du Design.');
+    } else {
+      writeScan('Grille masquée.');
     }
   }
 
@@ -332,7 +500,8 @@
       window.setTimeout(function () {
         writeScan('Design rechargé. Relance Scan pour sélectionner.');
         writeSelectedHtml('Aucun objet sélectionné.');
-      }, 500);
+        updateGridBounds();
+      }, 700);
     }
   }
 
@@ -378,8 +547,8 @@
         selectedElement = null;
         writeScan('Design chargé. Clique Scan pour activer la sélection.');
         writeSelectedHtml('Aucun objet sélectionné.');
-        window.setTimeout(updateGridBounds, 300);
-        window.setTimeout(updateGridBounds, 1200);
+        window.setTimeout(updateGridBounds, 400);
+        window.setTimeout(updateGridBounds, 1400);
       });
     }
 
