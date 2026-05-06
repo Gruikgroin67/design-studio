@@ -289,3 +289,27 @@
 .designstudio-grid-overlay.is-visible {
   display: block !important;
 }
+
+/* DESIGNSTUDIO_OBJECT_SELECTION_V1 */
+.designstudio-selected-title {
+  font-weight: 800 !important;
+  font-size: 16px !important;
+  margin-bottom: 10px !important;
+}
+
+.designstudio-kv {
+  display: grid !important;
+  grid-template-columns: 105px 1fr !important;
+  gap: 8px !important;
+  padding: 8px 0 !important;
+  border-bottom: 1px solid rgba(0,0,0,.08) !important;
+  font-size: 13px !important;
+}
+
+.designstudio-kv b {
+  opacity: .65 !important;
+}
+
+.designstudio-kv span {
+  word-break: break-word !important;
+}

@@ -58,7 +58,8 @@ try {
     <div class="designstudio-sidepanel-body">
       <div class="designstudio-line">Studio actif sur : <?php echo htmlspecialchars($planName); ?></div>
       <div class="designstudio-line" id="designstudio_scan_result">Scan non lancé</div>
-      <div class="designstudio-line">Prochaine étape : sélectionner un objet du Design et afficher ses dimensions.</div>
+      <div class="designstudio-line">Clique Scan, puis clique un objet du Design.</div>
+      <div class="designstudio-line" id="designstudio_selected_info">Aucun objet sélectionné.</div>
     </div>
   </div>
 </div>
