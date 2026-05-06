@@ -81,6 +81,30 @@ try {
           Enregistrer position
         </button>
         <!-- DESIGNSTUDIO_SAVE_POSITION_UI_V1 -->
+
+        <div class="designstudio-tool-separator"></div>
+
+        <div class="designstudio-tool-title">Alignement multiple</div>
+        <button type="button" class="designstudio-secondary-btn" data-action="multi-toggle">
+          Multi-sélection : OFF
+        </button>
+
+        <div class="designstudio-align-grid">
+          <button type="button" data-action="align-left">Aligner gauche</button>
+          <button type="button" data-action="align-top">Aligner haut</button>
+          <button type="button" data-action="align-right">Aligner droite</button>
+          <button type="button" data-action="align-bottom">Aligner bas</button>
+        </div>
+
+        <button type="button" class="designstudio-save-position-btn" data-action="save-all">
+          Enregistrer sélection
+        </button>
+
+        <div class="designstudio-nudge-note" id="designstudio_multi_state">
+          Multi-sélection inactive.
+        </div>
+
+        <!-- DESIGNSTUDIO_MULTI_ALIGN_UI_V1 -->
       </div>
 
       <div class="designstudio-line" id="designstudio_selected_info">Aucun objet sélectionné.</div>

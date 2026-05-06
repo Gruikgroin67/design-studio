@@ -1,13 +1,19 @@
-/* DESIGNSTUDIO_STUDIO_JS_V6_SAVE_POSITION */
+/* DESIGNSTUDIO_STUDIO_JS_V7_MULTI_SELECT_ALIGN_SAVE */
 (function () {
   'use strict';
 
   var selectedElement = null;
+  var selectedElements = [];
+  var multiMode = false;
   var selectionEnabled = false;
   var gridVisible = false;
 
   function qs(sel) {
     return document.querySelector(sel);
+  }
+
+  function qsa(sel) {
+    return Array.prototype.slice.call(document.querySelectorAll(sel));
   }
 
   function stop(ev) {
@@ -58,6 +64,26 @@
     if (selected) selected.innerHTML = html;
   }
 
+  function writeMultiState() {
+    var node = qs('#designstudio_multi_state');
+    if (!node) return;
+
+    if (!multiMode) {
+      node.textContent = 'Multi-sélection inactive.';
+      return;
+    }
+
+    node.textContent = selectedElements.length + ' objet(s) dans la sélection multiple.';
+  }
+
+  function updateMultiButton() {
+    var btn = qs('[data-action="multi-toggle"]');
+    if (!btn) return;
+
+    btn.textContent = multiMode ? 'Multi-sélection : ON' : 'Multi-sélection : OFF';
+    btn.classList.toggle('is-on', multiMode);
+  }
+
   function escapeHtml(text) {
     return String(text)
       .replace(/&/g, '&amp;')
@@ -97,16 +123,11 @@
     return 'Objet';
   }
 
-  function getAttr(el, name) {
-    if (!el) return '';
-    return el.getAttribute(name) || '';
-  }
-
   function getAttrDeep(el, names) {
     var current = el;
     var guard = 0;
 
-    while (current && current.nodeType === 1 && guard < 6) {
+    while (current && current.nodeType === 1 && guard < 8) {
       for (var i = 0; i < names.length; i++) {
         var value = current.getAttribute(names[i]);
         if (value) return value;
@@ -124,41 +145,32 @@
 
     if (el.classList.contains('postitdesign-widget') || el.classList.contains('eqLogic-widget')) {
       var eqId = getAttrDeep(el, ['data-eqlogic_id', 'data-eqlogic-id']);
-      if (eqId) {
-        return {
-          link_type: 'eqLogic',
-          link_id: parseInt(eqId, 10)
-        };
-      }
+      if (eqId) return { link_type: 'eqLogic', link_id: parseInt(eqId, 10) };
     }
 
     if (el.classList.contains('cmd-widget')) {
       var cmdId = getAttrDeep(el, ['data-cmd_id', 'data-cmd-id']);
-      if (cmdId) {
-        return {
-          link_type: 'cmd',
-          link_id: parseInt(cmdId, 10)
-        };
-      }
+      if (cmdId) return { link_type: 'cmd', link_id: parseInt(cmdId, 10) };
     }
 
     var fallbackEq = getAttrDeep(el, ['data-eqlogic_id', 'data-eqlogic-id']);
-    if (fallbackEq) {
-      return {
-        link_type: 'eqLogic',
-        link_id: parseInt(fallbackEq, 10)
-      };
-    }
+    if (fallbackEq) return { link_type: 'eqLogic', link_id: parseInt(fallbackEq, 10) };
 
     var fallbackCmd = getAttrDeep(el, ['data-cmd_id', 'data-cmd-id']);
-    if (fallbackCmd) {
-      return {
-        link_type: 'cmd',
-        link_id: parseInt(fallbackCmd, 10)
-      };
-    }
+    if (fallbackCmd) return { link_type: 'cmd', link_id: parseInt(fallbackCmd, 10) };
 
     return null;
+  }
+
+  function getElementKey(el) {
+    var info = getSelectedLinkInfo(el);
+    if (info) return info.link_type + ':' + info.link_id;
+
+    if (!el.getAttribute('data-designstudio-temp-key')) {
+      el.setAttribute('data-designstudio-temp-key', 'tmp-' + Math.random().toString(36).slice(2));
+    }
+
+    return el.getAttribute('data-designstudio-temp-key');
   }
 
   function getWidgets(doc) {
@@ -246,9 +258,7 @@
       return a.score - b.score;
     });
 
-    if (candidates.length > 0) {
-      return candidates[0].rect;
-    }
+    if (candidates.length > 0) return candidates[0].rect;
 
     if (widgets.length > 0) {
       var minX = Infinity;
@@ -369,6 +379,22 @@
     return box;
   }
 
+  function clearMultiVisual() {
+    selectedElements.forEach(function (el) {
+      if (!el || !el.style) return;
+      el.style.outline = '';
+      el.style.outlineOffset = '';
+    });
+  }
+
+  function markMultiVisual() {
+    selectedElements.forEach(function (el) {
+      if (!el || !el.style) return;
+      el.style.outline = '3px dashed #f39c12';
+      el.style.outlineOffset = '3px';
+    });
+  }
+
   function updateSelectionBox(el) {
     var doc = iframeDocument();
     if (!doc || !el) return;
@@ -391,6 +417,15 @@
       return;
     }
 
+    if (multiMode && selectedElements.length > 1) {
+      writeSelectedHtml(
+        '<div class="designstudio-selected-title">Sélection multiple</div>' +
+        '<div class="designstudio-kv"><b>Objets</b><span>' + selectedElements.length + '</span></div>' +
+        '<div class="designstudio-kv"><b>Action</b><span>Aligner puis Enregistrer sélection.</span></div>'
+      );
+      return;
+    }
+
     var rect = el.getBoundingClientRect();
     var style = el.ownerDocument.defaultView.getComputedStyle(el);
     var moved = el.getAttribute('data-designstudio-visual-moved') === '1';
@@ -408,13 +443,45 @@
     html += '<div class="designstudio-kv"><b>Déplacé</b><span>' + (moved ? 'Oui, visuel uniquement' : 'Non') + '</span></div>';
 
     writeSelectedHtml(html);
+  }
+
+  function toggleElementInMulti(el) {
+    var key = getElementKey(el);
+    var index = -1;
+
+    selectedElements.forEach(function (item, i) {
+      if (getElementKey(item) === key) index = i;
+    });
+
+    if (index >= 0) {
+      selectedElements.splice(index, 1);
+    } else {
+      selectedElements.push(el);
+    }
+
+    selectedElement = el;
+
+    clearMultiVisual();
+    markMultiVisual();
+    updateSelectionBox(el);
+    showSelectedInfo(el);
+    writeMultiState();
     openPanel();
   }
 
   function selectElement(el) {
+    if (multiMode) {
+      toggleElementInMulti(el);
+      return;
+    }
+
+    clearMultiVisual();
+    selectedElements = [el];
     selectedElement = el;
     updateSelectionBox(el);
     showSelectedInfo(el);
+    writeMultiState();
+    openPanel();
   }
 
   function findStudioTarget(start) {
@@ -471,7 +538,7 @@
 
     doc.addEventListener('pointerup', onPick, true);
 
-    writeScan('Mode sélection actif : clique un objet dans le Design.');
+    writeScan('Mode sélection actif : clique un ou plusieurs objets.');
     openPanel();
   }
 
@@ -546,120 +613,224 @@
     };
   }
 
+  function applyDelta(el, dx, dy) {
+    var clamp = clampDeltaToDesign(el, dx, dy);
+    dx = clamp.dx;
+    dy = clamp.dy;
+
+    if (dx === 0 && dy === 0) return false;
+
+    var win = el.ownerDocument.defaultView;
+    var style = win.getComputedStyle(el);
+
+    if (style.position === 'static') {
+      el.style.position = 'relative';
+    }
+
+    var left = pxToNumber(style.left, el.offsetLeft || 0);
+    var top = pxToNumber(style.top, el.offsetTop || 0);
+
+    el.style.left = Math.round(left + dx) + 'px';
+    el.style.top = Math.round(top + dy) + 'px';
+    el.setAttribute('data-designstudio-visual-moved', '1');
+
+    return true;
+  }
+
   function nudgeSelected(dx, dy) {
-    if (!selectedElement) {
+    var targets = multiMode && selectedElements.length > 1 ? selectedElements : [selectedElement];
+
+    targets = targets.filter(Boolean);
+
+    if (!targets.length) {
       writeSelectedHtml('Aucun objet sélectionné. Clique Scan puis sélectionne un objet.');
       openPanel();
       return;
     }
 
-    var clamp = clampDeltaToDesign(selectedElement, dx, dy);
-    dx = clamp.dx;
-    dy = clamp.dy;
+    var moved = 0;
 
-    if (dx === 0 && dy === 0) {
+    targets.forEach(function (el) {
+      if (applyDelta(el, dx, dy)) moved++;
+    });
+
+    if (selectedElement) {
       updateSelectionBox(selectedElement);
       showSelectedInfo(selectedElement);
-      writeScan('Limite du Design atteinte. Déplacement bloqué.');
-      return;
     }
 
-    var win = selectedElement.ownerDocument.defaultView;
-    var style = win.getComputedStyle(selectedElement);
-
-    if (style.position === 'static') {
-      selectedElement.style.position = 'relative';
-    }
-
-    var left = pxToNumber(style.left, selectedElement.offsetLeft || 0);
-    var top = pxToNumber(style.top, selectedElement.offsetTop || 0);
-
-    selectedElement.style.left = Math.round(left + dx) + 'px';
-    selectedElement.style.top = Math.round(top + dy) + 'px';
-    selectedElement.setAttribute('data-designstudio-visual-moved', '1');
-
-    updateSelectionBox(selectedElement);
     updateGridBounds();
-    showSelectedInfo(selectedElement);
-
-    if (clamp.blocked) {
-      writeScan('Déplacement limité au bord du Design : ' + dx + ' / ' + dy + ' px. Non enregistré.');
-    } else {
-      writeScan('Déplacement visuel : ' + dx + ' / ' + dy + ' px. Non enregistré.');
-    }
+    writeScan('Déplacement visuel appliqué à ' + moved + ' objet(s). Non enregistré.');
   }
 
-  function saveSelectedPosition() {
-    if (!selectedElement) {
-      writeScan('Aucun objet sélectionné.');
+  function alignSelected(direction) {
+    if (!multiMode || selectedElements.length < 2) {
+      writeScan('Active Multi-sélection et sélectionne au moins 2 objets.');
       openPanel();
       return;
     }
 
-    var linkInfo = getSelectedLinkInfo(selectedElement);
-    if (!linkInfo || !linkInfo.link_id || !linkInfo.link_type) {
-      writeScan('Impossible d’enregistrer : lien Jeedom non détecté.');
-      openPanel();
-      return;
-    }
-
-    var pos = calculateRelativePosition(selectedElement);
-    if (!pos) {
-      writeScan('Impossible d’enregistrer : position relative introuvable.');
-      openPanel();
-      return;
-    }
-
-    var btn = qs('[data-action="save-position"]');
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = 'Enregistrement...';
-    }
-
-    $.ajax({
-      type: 'POST',
-      url: 'plugins/designstudio/core/ajax/designstudio.ajax.php',
-      data: {
-        action: 'savePosition',
-        plan_id: getPlanId(),
-        link_type: linkInfo.link_type,
-        link_id: linkInfo.link_id,
-        left: pos.left,
-        top: pos.top,
-        width: pos.width,
-        height: pos.height
-      },
-      dataType: 'json',
-      cache: false,
-      global: false,
-      success: function (response) {
-        selectedElement.setAttribute('data-designstudio-visual-moved', '0');
-
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = 'Position enregistrée';
-          window.setTimeout(function () {
-            btn.textContent = 'Enregistrer position';
-          }, 1500);
-        }
-
-        writeScan('Position enregistrée : left=' + pos.left + ', top=' + pos.top + '. Recharge pour vérifier.');
-        showSelectedInfo(selectedElement);
-        openPanel();
-      },
-      error: function (xhr) {
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = 'Erreur enregistrement';
-          window.setTimeout(function () {
-            btn.textContent = 'Enregistrer position';
-          }, 1800);
-        }
-
-        writeScan('Erreur enregistrement : ' + (xhr && xhr.responseText ? xhr.responseText.slice(0, 220) : 'réponse vide'));
-        openPanel();
-      }
+    var rects = selectedElements.map(function (el) {
+      return { el: el, rect: normalizedRect(el.getBoundingClientRect()) };
     });
+
+    var target;
+
+    if (direction === 'left') {
+      target = Math.min.apply(null, rects.map(function (x) { return x.rect.left; }));
+      rects.forEach(function (x) { applyDelta(x.el, target - x.rect.left, 0); });
+    }
+
+    if (direction === 'top') {
+      target = Math.min.apply(null, rects.map(function (x) { return x.rect.top; }));
+      rects.forEach(function (x) { applyDelta(x.el, 0, target - x.rect.top); });
+    }
+
+    if (direction === 'right') {
+      target = Math.max.apply(null, rects.map(function (x) { return x.rect.right; }));
+      rects.forEach(function (x) { applyDelta(x.el, target - x.rect.right, 0); });
+    }
+
+    if (direction === 'bottom') {
+      target = Math.max.apply(null, rects.map(function (x) { return x.rect.bottom; }));
+      rects.forEach(function (x) { applyDelta(x.el, 0, target - x.rect.bottom); });
+    }
+
+    markMultiVisual();
+
+    if (selectedElement) {
+      updateSelectionBox(selectedElement);
+      showSelectedInfo(selectedElement);
+    }
+
+    updateGridBounds();
+    writeScan('Alignement "' + direction + '" appliqué à ' + selectedElements.length + ' objet(s). Non enregistré.');
+    openPanel();
+  }
+
+  function saveElementPosition(el) {
+    return new Promise(function (resolve, reject) {
+      var linkInfo = getSelectedLinkInfo(el);
+      if (!linkInfo || !linkInfo.link_id || !linkInfo.link_type) {
+        reject('Lien Jeedom non détecté');
+        return;
+      }
+
+      var pos = calculateRelativePosition(el);
+      if (!pos) {
+        reject('Position relative introuvable');
+        return;
+      }
+
+      $.ajax({
+        type: 'POST',
+        url: 'plugins/designstudio/core/ajax/designstudio.ajax.php',
+        data: {
+          action: 'savePosition',
+          plan_id: getPlanId(),
+          link_type: linkInfo.link_type,
+          link_id: linkInfo.link_id,
+          left: pos.left,
+          top: pos.top,
+          width: pos.width,
+          height: pos.height
+        },
+        dataType: 'json',
+        cache: false,
+        global: false,
+        success: function () {
+          el.setAttribute('data-designstudio-visual-moved', '0');
+          resolve(true);
+        },
+        error: function (xhr) {
+          reject(xhr && xhr.responseText ? xhr.responseText.slice(0, 220) : 'réponse vide');
+        }
+      });
+    });
+  }
+
+  function saveTargets(targets, button) {
+    targets = targets.filter(Boolean);
+
+    if (!targets.length) {
+      writeScan('Aucun objet à enregistrer.');
+      openPanel();
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Enregistrement...';
+    }
+
+    var saved = 0;
+
+    targets.reduce(function (promise, el) {
+      return promise.then(function () {
+        return saveElementPosition(el).then(function () {
+          saved++;
+        });
+      });
+    }, Promise.resolve()).then(function () {
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Enregistré';
+        window.setTimeout(function () {
+          button.textContent = button.getAttribute('data-original-label') || 'Enregistrer';
+        }, 1400);
+      }
+
+      clearMultiVisual();
+      if (multiMode) markMultiVisual();
+
+      if (selectedElement) showSelectedInfo(selectedElement);
+
+      writeScan(saved + ' position(s) enregistrée(s). Reload pour vérifier.');
+      openPanel();
+    }).catch(function (error) {
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Erreur';
+        window.setTimeout(function () {
+          button.textContent = button.getAttribute('data-original-label') || 'Enregistrer';
+        }, 1800);
+      }
+
+      writeScan('Erreur enregistrement : ' + error);
+      openPanel();
+    });
+  }
+
+  function saveSelectedPosition(btn) {
+    saveTargets([selectedElement], btn || qs('[data-action="save-position"]'));
+  }
+
+  function saveAllSelected(btn) {
+    if (!multiMode || selectedElements.length < 2) {
+      writeScan('Active Multi-sélection et sélectionne au moins 2 objets.');
+      openPanel();
+      return;
+    }
+
+    saveTargets(selectedElements, btn || qs('[data-action="save-all"]'));
+  }
+
+  function toggleMultiMode() {
+    multiMode = !multiMode;
+
+    if (!multiMode) {
+      clearMultiVisual();
+      selectedElements = selectedElement ? [selectedElement] : [];
+    } else {
+      selectedElements = selectedElement ? [selectedElement] : [];
+      markMultiVisual();
+    }
+
+    updateMultiButton();
+    writeMultiState();
+    showSelectedInfo(selectedElement);
+    writeScan(multiMode ? 'Multi-sélection active : clique plusieurs objets.' : 'Multi-sélection désactivée.');
+    openPanel();
   }
 
   function reloadFrame() {
@@ -667,18 +838,24 @@
 
     if (iframe && iframe.contentWindow) {
       selectedElement = null;
+      selectedElements = [];
       gridVisible = false;
       iframe.contentWindow.location.reload();
 
       window.setTimeout(function () {
         writeScan('Design rechargé. Relance Scan pour sélectionner.');
         writeSelectedHtml('Aucun objet sélectionné.');
+        writeMultiState();
       }, 700);
     }
   }
 
   function bindDock() {
-    document.querySelectorAll('[data-action]').forEach(function (btn) {
+    qsa('[data-action]').forEach(function (btn) {
+      if (!btn.getAttribute('data-original-label')) {
+        btn.setAttribute('data-original-label', btn.textContent);
+      }
+
       btn.addEventListener('click', function (ev) {
         stop(ev);
 
@@ -689,7 +866,13 @@
         if (action === 'scan') scanDesign();
         if (action === 'grid') toggleGrid();
         if (action === 'reload') reloadFrame();
-        if (action === 'save-position') saveSelectedPosition();
+        if (action === 'save-position') saveSelectedPosition(btn);
+        if (action === 'save-all') saveAllSelected(btn);
+        if (action === 'multi-toggle') toggleMultiMode();
+        if (action === 'align-left') alignSelected('left');
+        if (action === 'align-top') alignSelected('top');
+        if (action === 'align-right') alignSelected('right');
+        if (action === 'align-bottom') alignSelected('bottom');
 
         return false;
       }, false);
@@ -697,7 +880,7 @@
   }
 
   function bindNudgeTools() {
-    document.querySelectorAll('[data-nudge-dx][data-nudge-dy]').forEach(function (btn) {
+    qsa('[data-nudge-dx][data-nudge-dy]').forEach(function (btn) {
       btn.addEventListener('click', function (ev) {
         stop(ev);
 
@@ -713,15 +896,19 @@
   function boot() {
     bindDock();
     bindNudgeTools();
+    updateMultiButton();
+    writeMultiState();
 
     var iframe = iframeElement();
 
     if (iframe) {
       iframe.addEventListener('load', function () {
         selectedElement = null;
+        selectedElements = [];
         gridVisible = false;
         writeScan('Design chargé. Clique Scan pour activer la sélection.');
         writeSelectedHtml('Aucun objet sélectionné.');
+        writeMultiState();
         window.setTimeout(updateGridBounds, 400);
         window.setTimeout(updateGridBounds, 1400);
       });
