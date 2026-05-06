@@ -242,9 +242,86 @@
     writeScan('Déplacement visuel : ' + dx + ' / ' + dy + ' px. Non enregistré.');
   }
 
+  function findDesignSurface(doc) {
+    if (!doc) return null;
+
+    var selectors = [
+      '.div_displayObject',
+      '#div_displayObject',
+      '.planContainer',
+      '#div_pageContainer',
+      '#div_planContainer',
+      '.planHeader',
+      '.plan'
+    ];
+
+    for (var i = 0; i < selectors.length; i++) {
+      var el = doc.querySelector(selectors[i]);
+      if (!el) continue;
+
+      var r = el.getBoundingClientRect();
+      if (r.width > 150 && r.height > 150) {
+        return el;
+      }
+    }
+
+    var widgets = Array.prototype.slice.call(doc.querySelectorAll('.eqLogic-widget, .cmd-widget, .postitdesign-widget'));
+    if (!widgets.length) return null;
+
+    var minX = Infinity;
+    var minY = Infinity;
+    var maxX = -Infinity;
+    var maxY = -Infinity;
+
+    widgets.forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      minX = Math.min(minX, r.left);
+      minY = Math.min(minY, r.top);
+      maxX = Math.max(maxX, r.right);
+      maxY = Math.max(maxY, r.bottom);
+    });
+
+    return {
+      getBoundingClientRect: function () {
+        return {
+          left: minX,
+          top: minY,
+          width: Math.max(220, maxX - minX),
+          height: Math.max(220, maxY - minY)
+        };
+      }
+    };
+  }
+
+  function updateGridBounds() {
+    var grid = qs('#designstudio_grid_overlay');
+    var doc = iframeDocument();
+
+    if (!grid || !doc) return false;
+
+    var surface = findDesignSurface(doc);
+    if (!surface) return false;
+
+    var rect = surface.getBoundingClientRect();
+
+    grid.style.left = Math.round(rect.left) + 'px';
+    grid.style.top = Math.round(rect.top) + 'px';
+    grid.style.width = Math.round(rect.width) + 'px';
+    grid.style.height = Math.round(rect.height) + 'px';
+
+    return true;
+  }
+
   function toggleGrid() {
     var grid = qs('#designstudio_grid_overlay');
-    if (grid) grid.classList.toggle('is-visible');
+    if (!grid) return;
+
+    updateGridBounds();
+    grid.classList.toggle('is-visible');
+
+    if (grid.classList.contains('is-visible')) {
+      writeScan('Grille limitée à la zone du Design.');
+    }
   }
 
   function reloadFrame() {
@@ -301,8 +378,14 @@
         selectedElement = null;
         writeScan('Design chargé. Clique Scan pour activer la sélection.');
         writeSelectedHtml('Aucun objet sélectionné.');
+        window.setTimeout(updateGridBounds, 300);
+        window.setTimeout(updateGridBounds, 1200);
       });
     }
+
+    window.addEventListener('resize', function () {
+      updateGridBounds();
+    }, false);
   }
 
   if (document.readyState === 'loading') {
