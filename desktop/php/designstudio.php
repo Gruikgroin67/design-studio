@@ -8,20 +8,26 @@ include_file('desktop', 'designstudio', 'js', 'designstudio');
 ?>
 
 <div class="designstudio-admin">
-  <h2>Design Studio</h2>
+  <div class="designstudio-header">
+    <h2>Design Studio</h2>
+    <p>Outils modernes pour les Designs Jeedom.</p>
+  </div>
 
-  <div class="designstudio-card">
-    <h3>État du plugin</h3>
-    <p>Page admin légère. Aucun Design n’est modifié.</p>
+  <div class="designstudio-grid">
+    <div class="designstudio-card">
+      <h3>Phase actuelle</h3>
+      <p>Création du socle plugin. Aucun Design n’est encore modifié.</p>
 
-    <button type="button" class="btn btn-primary designstudio-btn" id="bt_designstudio_js">
-      Test JS local
-    </button>
+      <div class="designstudio-status">
+        <span class="designstudio-dot"></span>
+        Plugin chargé
+      </div>
+    </div>
 
-    <button type="button" class="btn btn-success designstudio-btn" id="bt_designstudio_ping">
-      Test AJAX
-    </button>
-
-    <pre id="designstudio_result" class="designstudio-result">Page chargée.</pre>
+    <div class="designstudio-card">
+      <h3>Prochaine étape</h3>
+      <p>Afficher la liste des Designs Jeedom puis préparer une toolbar isolée.</p>
+      <p class="designstudio-muted">On évite les tests visuels parasites. On avance directement sur le vrai moteur.</p>
+    </div>
   </div>
 </div>
