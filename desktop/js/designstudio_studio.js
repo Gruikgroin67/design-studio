@@ -7,6 +7,8 @@
   var multiMode = false;
   var selectionEnabled = false;
   var gridVisible = false;
+  var lastPickAt = 0;
+  var lastPickKey = '';
 
   function qs(sel) {
     return document.querySelector(sel);
@@ -508,37 +510,74 @@
       return;
     }
 
-    if (doc.body.getAttribute('data-designstudio-selection-installed') === '1') {
-      selectionEnabled = true;
-      writeScan('Mode sélection déjà actif.');
-      return;
-    }
-
-    doc.body.setAttribute('data-designstudio-selection-installed', '1');
     selectionEnabled = true;
+    doc.body.setAttribute('data-designstudio-selection-installed', '1');
+    doc.body.setAttribute('data-designstudio-left-click-selection', '1');
 
-    function onPick(ev) {
-      if (!selectionEnabled) return;
+    try {
+      doc.body.style.cursor = 'crosshair';
+    } catch (e) {}
+
+    function pickFromEvent(ev) {
+      if (!selectionEnabled) return false;
+
+      /*
+       * En Studio :
+       * - clic gauche / toucher = sélectionner ;
+       * - clic droit = bloqué pour éviter le menu Jeedom ;
+       * - les doubles événements pointerdown/click/touchend sont filtrés.
+       */
+      if (ev && ev.type !== 'contextmenu') {
+        if (typeof ev.button === 'number' && ev.button !== 0) {
+          return false;
+        }
+      }
 
       var target = findStudioTarget(ev.target);
-      if (!target) return;
+
+      if (!target) {
+        if (ev && ev.type === 'contextmenu') {
+          stop(ev);
+          return false;
+        }
+        return false;
+      }
+
+      var key = getElementKey(target);
+      var now = Date.now();
+
+      if (key === lastPickKey && now - lastPickAt < 280) {
+        stop(ev);
+        return false;
+      }
+
+      lastPickKey = key;
+      lastPickAt = now;
 
       stop(ev);
       selectElement(target);
+
       return false;
     }
 
-    doc.addEventListener('click', onPick, true);
+    [
+      'pointerdown',
+      'mousedown',
+      'click',
+      'touchend',
+      'contextmenu'
+    ].forEach(function (eventName) {
+      try {
+        doc.addEventListener(eventName, pickFromEvent, {
+          capture: true,
+          passive: false
+        });
+      } catch (e) {
+        doc.addEventListener(eventName, pickFromEvent, true);
+      }
+    });
 
-    try {
-      doc.addEventListener('touchend', onPick, { capture: true, passive: false });
-    } catch (e) {
-      doc.addEventListener('touchend', onPick, true);
-    }
-
-    doc.addEventListener('pointerup', onPick, true);
-
-    writeScan('Mode sélection actif : clique un ou plusieurs objets.');
+    writeScan('Mode sélection actif : clic gauche ou toucher pour sélectionner. Clic droit Jeedom bloqué.');
     openPanel();
   }
 

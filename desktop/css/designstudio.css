@@ -483,3 +483,8 @@
   font-size: 12px !important;
   cursor: pointer !important;
 }
+
+/* DESIGNSTUDIO_LEFT_CLICK_SELECTION_CSS_V1 */
+.designstudio-sidepanel-body {
+  overscroll-behavior: contain !important;
+}
