@@ -16,11 +16,14 @@ try {
         }
 
         config::save('toolbar_prepared_' . $plan_id, 1, 'designstudio');
+        $eqLogic = designstudio::ensureToolbarEqLogic($plan_id);
 
         ajax::success(array(
             'ok' => true,
             'plan_id' => $plan_id,
-            'prepared' => true
+            'prepared' => true,
+            'eqLogic_id' => $eqLogic->getId(),
+            'eqLogic_name' => $eqLogic->getName()
         ));
     }
 
