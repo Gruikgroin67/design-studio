@@ -1,55 +1,87 @@
-/* DESIGNSTUDIO_ADMIN_JS_V2 */
+/* DESIGNSTUDIO_ADMIN_JS_V3 */
 (function () {
   'use strict';
 
+  console.log('[DesignStudio] JS loaded');
+
   function stopEvent(ev) {
     if (!ev) return false;
+
     try { ev.preventDefault(); } catch (e) {}
     try { ev.stopPropagation(); } catch (e) {}
     try { ev.stopImmediatePropagation(); } catch (e) {}
+
     return false;
   }
 
   function bindTouchSafe(el, handler) {
-    if (!el || typeof handler !== 'function') return;
+    if (!el || typeof handler !== 'function') {
+      return;
+    }
 
     var locked = false;
 
     var run = function (ev) {
       stopEvent(ev);
 
-      if (locked) return false;
+      if (locked) {
+        return false;
+      }
+
       locked = true;
+
       window.setTimeout(function () {
         locked = false;
       }, 450);
 
       handler(ev);
+
       return false;
     };
 
-    el.onclick = run;
-    el.ontouchend = run;
-    el.onpointerup = run;
-
-    try {
-      el.addEventListener('click', run, { capture: true, passive: false });
-      el.addEventListener('touchend', run, { capture: true, passive: false });
-      el.addEventListener('pointerup', run, { capture: true, passive: false });
-    } catch (e) {
-      el.addEventListener('click', run, true);
-      el.addEventListener('touchend', run, true);
-      el.addEventListener('pointerup', run, true);
-    }
+    [
+      'click',
+      'touchend',
+      'pointerup'
+    ].forEach(function (evt) {
+      try {
+        el.addEventListener(evt, run, {
+          capture: true,
+          passive: false
+        });
+      } catch (e) {
+        el.addEventListener(evt, run, true);
+      }
+    });
   }
 
-  function writeResult(text) {
-    var result = document.getElementById('designstudio_result');
-    if (result) result.textContent = text;
+  function resultNode() {
+    return document.getElementById('designstudio_result');
+  }
+
+  function writeResult(value) {
+    var node = resultNode();
+
+    if (!node) {
+      console.warn('[DesignStudio] result node not found');
+      return;
+    }
+
+    if (typeof value !== 'string') {
+      try {
+        value = JSON.stringify(value, null, 2);
+      } catch (e) {
+        value = String(value);
+      }
+    }
+
+    node.textContent = value;
   }
 
   function ping() {
-    writeResult('Test AJAX en cours...');
+    console.log('[DesignStudio] ping start');
+
+    writeResult('Chargement AJAX...');
 
     $.ajax({
       type: 'POST',
@@ -58,19 +90,44 @@
         action: 'ping'
       },
       dataType: 'json',
+      cache: false,
       global: false,
-      error: function (request) {
-        writeResult('ERREUR AJAX\n' + (request && request.responseText ? request.responseText : 'Réponse vide'));
+
+      success: function (response) {
+        console.log('[DesignStudio] ajax success', response);
+
+        writeResult({
+          ajax: 'success',
+          response: response
+        });
       },
-      success: function (data) {
-        writeResult(JSON.stringify(data, null, 2));
+
+      error: function (xhr, status, error) {
+        console.error('[DesignStudio] ajax error', status, error);
+
+        writeResult({
+          ajax: 'error',
+          status: status,
+          error: error,
+          responseText: xhr && xhr.responseText ? xhr.responseText : null
+        });
       }
     });
   }
 
   function boot() {
+    console.log('[DesignStudio] boot');
+
     var btn = document.getElementById('bt_designstudio_ping');
+
+    if (!btn) {
+      console.warn('[DesignStudio] button not found');
+      return;
+    }
+
     bindTouchSafe(btn, ping);
+
+    writeResult('Design Studio prêt.');
   }
 
   if (document.readyState === 'loading') {
@@ -78,4 +135,5 @@
   } else {
     boot();
   }
+
 })();
