@@ -1,9 +1,10 @@
-/* DESIGNSTUDIO_STUDIO_JS_V4_GRID_LIMIT_AND_CLAMP */
+/* DESIGNSTUDIO_STUDIO_JS_V5_IFRAME_GRID_AND_CLAMP */
 (function () {
   'use strict';
 
   var selectedElement = null;
   var selectionEnabled = false;
+  var gridVisible = false;
 
   function qs(sel) {
     return document.querySelector(sel);
@@ -24,6 +25,7 @@
   function iframeDocument() {
     var iframe = iframeElement();
     if (!iframe || !iframe.contentWindow) return null;
+
     try {
       return iframe.contentWindow.document;
     } catch (e) {
@@ -66,6 +68,17 @@
     return n;
   }
 
+  function normalizedRect(r) {
+    return {
+      left: r.left,
+      top: r.top,
+      right: r.left + r.width,
+      bottom: r.top + r.height,
+      width: r.width,
+      height: r.height
+    };
+  }
+
   function getCleanText(el) {
     var txt = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
     if (txt.length > 120) txt = txt.slice(0, 120) + '...';
@@ -85,10 +98,11 @@
 
   function getWidgets(doc) {
     if (!doc) return [];
+
     return Array.prototype.slice.call(
       doc.querySelectorAll('.postitdesign-widget, .eqLogic-widget, .cmd-widget')
     ).filter(function (el) {
-      return el && el.id !== 'designstudio-selection-box';
+      return el && el.id !== 'designstudio-selection-box' && el.id !== 'designstudio-design-grid';
     });
   }
 
@@ -104,24 +118,15 @@
     );
   }
 
-  function normalizedRect(r) {
-    return {
-      left: r.left,
-      top: r.top,
-      right: r.left + r.width,
-      bottom: r.top + r.height,
-      width: r.width,
-      height: r.height
-    };
-  }
-
   function findDesignSurface(doc) {
     if (!doc) return null;
 
     var widgets = getWidgets(doc);
     var candidates = [];
+    var viewportW = doc.defaultView.innerWidth || 0;
+    var viewportH = doc.defaultView.innerHeight || 0;
 
-    var preferredSelectors = [
+    var selectors = [
       '#div_displayObject',
       '.div_displayObject',
       '#div_pageContainer',
@@ -132,66 +137,48 @@
       '#planContainer'
     ];
 
-    preferredSelectors.forEach(function (sel) {
+    selectors.forEach(function (sel) {
       var el = doc.querySelector(sel);
       if (!el) return;
+
       var r = normalizedRect(el.getBoundingClientRect());
       if (r.width >= 180 && r.height >= 180) {
-        candidates.push({ el: el, rect: r, priority: 0 });
+        candidates.push({ el: el, rect: r, score: 10 });
       }
     });
 
     Array.prototype.slice.call(doc.querySelectorAll('div')).forEach(function (el) {
-      if (!el || el.id === 'designstudio-selection-box') return;
+      if (!el || el.id === 'designstudio-selection-box' || el.id === 'designstudio-design-grid') return;
 
       var r = normalizedRect(el.getBoundingClientRect());
       if (r.width < 180 || r.height < 180) return;
 
-      var style = doc.defaultView.getComputedStyle(el);
-      var bg = style.backgroundColor || '';
-
-      var hasVisibleBg = (
-        bg &&
-        bg !== 'transparent' &&
-        bg !== 'rgba(0, 0, 0, 0)' &&
-        bg !== 'rgb(255, 255, 255)'
-      );
-
-      if (!hasVisibleBg && widgets.length > 0) return;
-
-      candidates.push({ el: el, rect: r, priority: hasVisibleBg ? 1 : 2 });
-    });
-
-    if (widgets.length > 0) {
-      candidates = candidates.filter(function (c) {
-        var contained = 0;
-
-        widgets.forEach(function (w) {
-          var wr = normalizedRect(w.getBoundingClientRect());
-          if (rectContainsCenter(c.rect, wr)) contained++;
-        });
-
-        return contained >= Math.max(1, Math.ceil(widgets.length * 0.66));
-      });
-    }
-
-    candidates = candidates.filter(function (c) {
-      var viewportW = doc.defaultView.innerWidth || 0;
-      var viewportH = doc.defaultView.innerHeight || 0;
-
-      if (viewportW > 0 && c.rect.width > viewportW * 0.98 && c.rect.height > viewportH * 0.90) {
-        return false;
+      if (viewportW > 0 && viewportH > 0) {
+        if (r.width > viewportW * 0.96 && r.height > viewportH * 0.88) return;
       }
 
-      return true;
+      var style = doc.defaultView.getComputedStyle(el);
+      var bg = style.backgroundColor || '';
+      var hasBg = bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'rgb(255, 255, 255)';
+
+      var contained = 0;
+      widgets.forEach(function (w) {
+        var wr = normalizedRect(w.getBoundingClientRect());
+        if (rectContainsCenter(r, wr)) contained++;
+      });
+
+      if (widgets.length > 0 && contained === 0) return;
+
+      var score = 1000;
+      if (hasBg) score -= 200;
+      score -= contained * 80;
+      score += Math.round((r.width * r.height) / 10000);
+
+      candidates.push({ el: el, rect: r, score: score });
     });
 
     candidates.sort(function (a, b) {
-      var areaA = a.rect.width * a.rect.height;
-      var areaB = b.rect.width * b.rect.height;
-
-      if (a.priority !== b.priority) return a.priority - b.priority;
-      return areaA - areaB;
+      return a.score - b.score;
     });
 
     if (candidates.length > 0) {
@@ -213,6 +200,7 @@
       });
 
       var margin = 40;
+
       return {
         left: Math.max(0, minX - margin),
         top: Math.max(0, minY - margin),
@@ -226,14 +214,39 @@
     return null;
   }
 
-  function updateGridBounds() {
-    var grid = qs('#designstudio_grid_overlay');
-    var doc = iframeDocument();
+  function ensureIframeGrid(doc) {
+    var grid = doc.getElementById('designstudio-design-grid');
+    if (grid) return grid;
 
-    if (!grid || !doc) return false;
+    grid = doc.createElement('div');
+    grid.id = 'designstudio-design-grid';
+    grid.style.position = 'fixed';
+    grid.style.left = '0px';
+    grid.style.top = '0px';
+    grid.style.width = '0px';
+    grid.style.height = '0px';
+    grid.style.zIndex = '2147481000';
+    grid.style.pointerEvents = 'none';
+    grid.style.display = 'none';
+    grid.style.boxSizing = 'border-box';
+    grid.style.border = '3px solid rgba(47,128,237,.95)';
+    grid.style.borderRadius = '4px';
+    grid.style.backgroundColor = 'rgba(47,128,237,.08)';
+    grid.style.backgroundImage = 'linear-gradient(rgba(47,128,237,.45) 1px, transparent 1px), linear-gradient(90deg, rgba(47,128,237,.45) 1px, transparent 1px)';
+    grid.style.backgroundSize = '24px 24px';
+
+    doc.body.appendChild(grid);
+    return grid;
+  }
+
+  function updateGridBounds() {
+    var doc = iframeDocument();
+    if (!doc) return false;
 
     var rect = findDesignSurface(doc);
-    if (!rect) {
+    var grid = ensureIframeGrid(doc);
+
+    if (!rect || !grid) {
       writeScan('Grille : zone Design introuvable.');
       return false;
     }
@@ -242,8 +255,40 @@
     grid.style.top = Math.round(rect.top) + 'px';
     grid.style.width = Math.round(rect.width) + 'px';
     grid.style.height = Math.round(rect.height) + 'px';
+    grid.style.display = gridVisible ? 'block' : 'none';
+
+    grid.setAttribute(
+      'data-bounds',
+      Math.round(rect.left) + ',' + Math.round(rect.top) + ',' + Math.round(rect.width) + ',' + Math.round(rect.height)
+    );
 
     return true;
+  }
+
+  function toggleGrid() {
+    var doc = iframeDocument();
+
+    if (!doc) {
+      writeScan('Grille : iframe inaccessible.');
+      openPanel();
+      return;
+    }
+
+    gridVisible = !gridVisible;
+    var ok = updateGridBounds();
+    var grid = ensureIframeGrid(doc);
+
+    if (!ok) {
+      gridVisible = false;
+      if (grid) grid.style.display = 'none';
+      openPanel();
+      return;
+    }
+
+    if (grid) grid.style.display = gridVisible ? 'block' : 'none';
+
+    writeScan(gridVisible ? 'Grille affichée dans le Design.' : 'Grille masquée.');
+    openPanel();
   }
 
   function ensureSelectionBox(doc) {
@@ -406,21 +451,10 @@
     var clampedDx = dx;
     var clampedDy = dy;
 
-    if (newLeft < surface.left) {
-      clampedDx += surface.left - newLeft;
-    }
-
-    if (newRight > surface.right) {
-      clampedDx -= newRight - surface.right;
-    }
-
-    if (newTop < surface.top) {
-      clampedDy += surface.top - newTop;
-    }
-
-    if (newBottom > surface.bottom) {
-      clampedDy -= newBottom - surface.bottom;
-    }
+    if (newLeft < surface.left) clampedDx += surface.left - newLeft;
+    if (newRight > surface.right) clampedDx -= newRight - surface.right;
+    if (newTop < surface.top) clampedDy += surface.top - newTop;
+    if (newBottom > surface.bottom) clampedDy -= newBottom - surface.bottom;
 
     return {
       dx: clampedDx,
@@ -472,35 +506,17 @@
     }
   }
 
-  function toggleGrid() {
-    var grid = qs('#designstudio_grid_overlay');
-    if (!grid) return;
-
-    var ok = updateGridBounds();
-
-    if (!ok) {
-      grid.classList.remove('is-visible');
-      return;
-    }
-
-    grid.classList.toggle('is-visible');
-
-    if (grid.classList.contains('is-visible')) {
-      writeScan('Grille limitée à la zone réelle du Design.');
-    } else {
-      writeScan('Grille masquée.');
-    }
-  }
-
   function reloadFrame() {
     var iframe = iframeElement();
+
     if (iframe && iframe.contentWindow) {
       selectedElement = null;
+      gridVisible = false;
       iframe.contentWindow.location.reload();
+
       window.setTimeout(function () {
         writeScan('Design rechargé. Relance Scan pour sélectionner.');
         writeSelectedHtml('Aucun objet sélectionné.');
-        updateGridBounds();
       }, 700);
     }
   }
@@ -542,9 +558,11 @@
     bindNudgeTools();
 
     var iframe = iframeElement();
+
     if (iframe) {
       iframe.addEventListener('load', function () {
         selectedElement = null;
+        gridVisible = false;
         writeScan('Design chargé. Clique Scan pour activer la sélection.');
         writeSelectedHtml('Aucun objet sélectionné.');
         window.setTimeout(updateGridBounds, 400);
