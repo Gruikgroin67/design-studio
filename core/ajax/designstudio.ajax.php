@@ -9,21 +9,20 @@ try {
 
     ajax::init();
 
-    if (init('action') == 'prepareToolbar') {
-        $plan_id = intval(init('plan_id'));
-        if ($plan_id <= 0) {
-            throw new Exception(__('ID Design invalide', __FILE__));
-        }
-
-        config::save('toolbar_prepared_' . $plan_id, 1, 'designstudio');
-        $eqLogic = designstudio::ensureToolbarEqLogic($plan_id);
+    if (init('action') == 'setOverlayEnabled') {
+        $enabled = intval(init('enabled')) == 1 ? 1 : 0;
+        config::save('overlay_enabled', $enabled, 'designstudio');
 
         ajax::success(array(
             'ok' => true,
-            'plan_id' => $plan_id,
-            'prepared' => true,
-            'eqLogic_id' => $eqLogic->getId(),
-            'eqLogic_name' => $eqLogic->getName()
+            'overlay_enabled' => $enabled
+        ));
+    }
+
+    if (init('action') == 'getOverlayState') {
+        ajax::success(array(
+            'ok' => true,
+            'overlay_enabled' => intval(config::byKey('overlay_enabled', 'designstudio', 1))
         ));
     }
 

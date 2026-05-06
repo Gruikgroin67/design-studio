@@ -1,4 +1,4 @@
-/* DESIGNSTUDIO_ADMIN_CSS_V5_CLEAN */
+/* DESIGNSTUDIO_ADMIN_CSS_V6_OVERLAY_SETTINGS */
 .designstudio-admin {
   padding: 24px !important;
   max-width: 1180px !important;
@@ -51,198 +51,20 @@
   opacity: .65 !important;
 }
 
-.designstudio-status {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 8px 10px !important;
-  border-radius: 999px !important;
-  background: rgba(46, 204, 113, .12) !important;
-  color: #1f7a42 !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-}
-
-.designstudio-dot {
-  width: 9px !important;
-  height: 9px !important;
-  border-radius: 50% !important;
-  background: #2ecc71 !important;
-  display: inline-block !important;
-}
-
-/* DESIGNSTUDIO_DESIGN_LIST_V1 */
-.designstudio-section {
-  margin-top: 22px !important;
-}
-
-.designstudio-section-title {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  margin-bottom: 12px !important;
-  max-width: 1180px !important;
-}
-
-.designstudio-section-title h3 {
-  margin: 0 !important;
-  font-size: 22px !important;
-  font-weight: 600 !important;
-}
-
-.designstudio-section-title span {
-  opacity: .65 !important;
-  font-size: 13px !important;
-}
-
-.designstudio-design-list {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
-  gap: 12px !important;
-  max-width: 1180px !important;
-}
-
-.designstudio-design-card {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 12px !important;
-  padding: 14px !important;
-  border-radius: 12px !important;
-  background: #fff !important;
-  border: 1px solid rgba(0,0,0,.12) !important;
-  box-shadow: 0 3px 12px rgba(0,0,0,.05) !important;
-}
-
-.designstudio-design-name {
-  font-size: 16px !important;
-  font-weight: 600 !important;
-}
-
-.designstudio-design-meta {
-  margin-top: 4px !important;
-  font-size: 12px !important;
-  opacity: .6 !important;
-}
-
-.designstudio-open-link {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  height: 34px !important;
-  padding: 0 12px !important;
-  border-radius: 9px !important;
-  background: #2f80ed !important;
-  color: #fff !important;
-  text-decoration: none !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  white-space: nowrap !important;
-}
-
-.designstudio-open-link:hover,
-.designstudio-open-link:focus {
-  color: #fff !important;
-  text-decoration: none !important;
-  filter: brightness(.95) !important;
-}
-
-.designstudio-empty {
-  max-width: 760px !important;
-  padding: 16px !important;
-  border-radius: 12px !important;
-  background: #fff !important;
-  border: 1px dashed rgba(0,0,0,.25) !important;
-  opacity: .75 !important;
-}
-
-/* DESIGNSTUDIO_PREPARE_TOOLBAR_V1 */
-.designstudio-design-state {
-  margin-top: 5px !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  color: #777 !important;
-}
-
-.designstudio-actions {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  flex-shrink: 0 !important;
-}
-
-.designstudio-prepare-btn {
-  height: 34px !important;
-  padding: 0 12px !important;
-  border: 0 !important;
-  border-radius: 9px !important;
-  background: #1f7a42 !important;
-  color: #fff !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  white-space: nowrap !important;
-  cursor: pointer !important;
-}
-
-.designstudio-prepare-btn.is-ready,
-.designstudio-prepare-btn:disabled {
-  background: #777 !important;
-  cursor: default !important;
-}
-
-/* DESIGNSTUDIO_NATIVE_TOOLBAR_WIDGET_V1 */
-.designstudio-toolbar-widget {
-  min-width: 220px !important;
-  display: inline-block !important;
-  font-family: Arial, Helvetica, sans-serif !important;
-  user-select: none !important;
-  -webkit-user-select: none !important;
-}
-
-.designstudio-toolbar-main {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 8px !important;
-  border-radius: 14px !important;
-  background: rgba(25,25,25,.90) !important;
-  color: #fff !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,.25) !important;
-}
-
-.designstudio-toolbar-title {
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  padding: 0 4px !important;
-}
-
-.designstudio-toolbar-button {
-  height: 34px !important;
-  padding: 0 12px !important;
+.designstudio-admin-btn {
+  height: 38px !important;
+  padding: 0 16px !important;
   border: 0 !important;
   border-radius: 10px !important;
-  background: #2f80ed !important;
   color: #fff !important;
-  font-size: 13px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
 }
 
-.designstudio-toolbar-panel {
-  display: none !important;
-  margin-top: 8px !important;
-  width: 240px !important;
-  padding: 12px !important;
-  border-radius: 14px !important;
-  background: rgba(25,25,25,.95) !important;
-  color: #fff !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,.25) !important;
-  font-size: 13px !important;
-  line-height: 1.45 !important;
+.designstudio-admin-btn.is-on {
+  background: #1f7a42 !important;
 }
 
-.designstudio-toolbar-widget.is-open .designstudio-toolbar-panel {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 4px !important;
+.designstudio-admin-btn.is-off {
+  background: #777 !important;
 }

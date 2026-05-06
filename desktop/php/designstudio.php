@@ -6,93 +6,32 @@ if (!isConnect('admin')) {
 include_file('desktop', 'designstudio', 'css', 'designstudio');
 include_file('desktop', 'designstudio', 'js', 'designstudio');
 
-$designs = array();
-
-try {
-    if (class_exists('planHeader')) {
-        foreach (planHeader::all() as $planHeader) {
-            $designs[] = array(
-                'id' => $planHeader->getId(),
-                'name' => $planHeader->getName(),
-                'configuration' => $planHeader->getConfiguration()
-            );
-        }
-    }
-} catch (Exception $e) {
-    $designs = array();
-}
+$overlayEnabled = intval(config::byKey('overlay_enabled', 'designstudio', 1));
 ?>
 
 <div class="designstudio-admin">
   <div class="designstudio-header">
     <h2>Design Studio</h2>
-    <p>Outils modernes pour les Designs Jeedom.</p>
+    <p>Surcouche moderne pour les Designs Jeedom.</p>
   </div>
 
   <div class="designstudio-grid">
     <div class="designstudio-card">
-      <h3>Phase actuelle</h3>
-      <p>Lecture des Designs Jeedom en mode sécurisé. Aucun Design n’est modifié.</p>
+      <h3>Overlay Design</h3>
+      <p>Active un dock flottant moderne directement sur les pages Design.</p>
 
-      <div class="designstudio-status">
-        <span class="designstudio-dot"></span>
-        Plugin chargé
-      </div>
+      <button type="button"
+              id="bt_designstudio_toggle_overlay"
+              class="designstudio-admin-btn <?php echo $overlayEnabled ? 'is-on' : 'is-off'; ?>"
+              data-enabled="<?php echo $overlayEnabled; ?>">
+        <?php echo $overlayEnabled ? 'Overlay activé' : 'Overlay désactivé'; ?>
+      </button>
     </div>
 
     <div class="designstudio-card">
-      <h3>Prochaine étape</h3>
-      <p>Préparer une toolbar isolée par Design, sans toucher aux objets existants.</p>
-      <p class="designstudio-muted">La toolbar sera activable uniquement sur un Design choisi.</p>
+      <h3>Mode actuel</h3>
+      <p>Aucun widget Jeedom n’est créé. Aucun Design n’est modifié.</p>
+      <p class="designstudio-muted">Le dock est injecté côté navigateur uniquement sur les pages Design.</p>
     </div>
-  </div>
-
-  <div class="designstudio-section">
-    <div class="designstudio-section-title">
-      <h3>Designs détectés</h3>
-      <span><?php echo count($designs); ?> design(s)</span>
-    </div>
-
-    <?php if (count($designs) == 0) { ?>
-      <div class="designstudio-empty">
-        Aucun Design détecté ou lecture impossible.
-      </div>
-    <?php } else { ?>
-      <div class="designstudio-design-list">
-        <?php foreach ($designs as $design) { ?>
-          <div class="designstudio-design-card" data-plan-id="<?php echo $design['id']; ?>">
-            <div class="designstudio-design-main">
-              <div class="designstudio-design-name">
-                <?php echo htmlspecialchars($design['name']); ?>
-              </div>
-              <div class="designstudio-design-meta">
-                ID Design : <?php echo $design['id']; ?>
-              </div>
-              <div class="designstudio-design-state">
-                <?php if (config::byKey('toolbar_prepared_' . $design['id'], 'designstudio', 0) == 1) { ?>
-                  Toolbar préparée
-                <?php } else { ?>
-                  Toolbar non préparée
-                <?php } ?>
-              </div>
-            </div>
-
-            <div class="designstudio-actions">
-              <button type="button"
-                      class="designstudio-prepare-btn"
-                      data-plan-id="<?php echo $design['id']; ?>">
-                Préparer toolbar
-              </button>
-
-              <a class="designstudio-open-link"
-                 href="index.php?v=d&p=plan&plan_id=<?php echo $design['id']; ?>"
-                 target="_blank">
-                Ouvrir
-              </a>
-            </div>
-          </div>
-        <?php } ?>
-      </div>
-    <?php } ?>
   </div>
 </div>

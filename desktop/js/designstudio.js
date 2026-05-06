@@ -1,67 +1,43 @@
-/* DESIGNSTUDIO_ADMIN_JS_V8_NATIVE_TOOLBAR */
+/* DESIGNSTUDIO_ADMIN_JS_V9_OVERLAY_SETTINGS */
 (function () {
   'use strict';
 
-  function bindPrepareButtons() {
-    document.querySelectorAll('.designstudio-prepare-btn').forEach(function (btn) {
-      btn.addEventListener('click', function (ev) {
-        ev.preventDefault();
-
-        var planId = btn.getAttribute('data-plan-id');
-        if (!planId) return;
-
-        btn.disabled = true;
-        btn.textContent = 'Création...';
-
-        $.ajax({
-          type: 'POST',
-          url: 'plugins/designstudio/core/ajax/designstudio.ajax.php',
-          data: {
-            action: 'prepareToolbar',
-            plan_id: planId
-          },
-          dataType: 'json',
-          cache: false,
-          global: false,
-          success: function (response) {
-            btn.textContent = 'Équipement créé';
-            btn.classList.add('is-ready');
-
-            var card = btn.closest('.designstudio-design-card');
-            if (card) {
-              var state = card.querySelector('.designstudio-design-state');
-              if (state) state.textContent = 'Toolbar préparée - équipement créé';
-            }
-          },
-          error: function (xhr) {
-            btn.disabled = false;
-            btn.textContent = 'Erreur';
-            console.error('[DesignStudio] prepareToolbar error', xhr && xhr.responseText ? xhr.responseText : xhr);
-            window.setTimeout(function () {
-              btn.textContent = 'Préparer toolbar';
-            }, 2000);
-          }
-        });
-      }, false);
-    });
-  }
-
-  function bindToolbarWidgets() {
-    document.querySelectorAll('.designstudio-toolbar-widget .designstudio-toolbar-button').forEach(function (btn) {
-      btn.addEventListener('click', function (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-
-        var widget = btn.closest('.designstudio-toolbar-widget');
-        if (widget) widget.classList.toggle('is-open');
-      }, false);
-    });
-  }
-
   function boot() {
-    window.designstudioAdminLoaded = true;
-    bindPrepareButtons();
-    bindToolbarWidgets();
+    var btn = document.getElementById('bt_designstudio_toggle_overlay');
+    if (!btn) return;
+
+    btn.addEventListener('click', function (ev) {
+      ev.preventDefault();
+
+      var current = parseInt(btn.getAttribute('data-enabled') || '0', 10);
+      var next = current === 1 ? 0 : 1;
+
+      btn.disabled = true;
+      btn.textContent = 'Mise à jour...';
+
+      $.ajax({
+        type: 'POST',
+        url: 'plugins/designstudio/core/ajax/designstudio.ajax.php',
+        data: {
+          action: 'setOverlayEnabled',
+          enabled: next
+        },
+        dataType: 'json',
+        cache: false,
+        global: false,
+        success: function () {
+          btn.disabled = false;
+          btn.setAttribute('data-enabled', String(next));
+          btn.classList.toggle('is-on', next === 1);
+          btn.classList.toggle('is-off', next !== 1);
+          btn.textContent = next === 1 ? 'Overlay activé' : 'Overlay désactivé';
+        },
+        error: function () {
+          btn.disabled = false;
+          btn.textContent = current === 1 ? 'Overlay activé' : 'Overlay désactivé';
+        }
+      });
+    }, false);
   }
 
   if (document.readyState === 'loading') {
