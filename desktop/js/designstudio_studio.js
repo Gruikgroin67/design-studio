@@ -1,4 +1,4 @@
-/* DESIGNSTUDIO_STUDIO_JS_V2_OBJECT_SELECTION */
+/* DESIGNSTUDIO_STUDIO_JS_V3_OBJECT_SELECTION_AND_VISUAL_NUDGE */
 (function () {
   'use strict';
 
@@ -47,6 +47,11 @@
     if (result) result.textContent = text;
   }
 
+  function writeSelectedHtml(html) {
+    var selected = qs('#designstudio_selected_info');
+    if (selected) selected.innerHTML = html;
+  }
+
   function ensureSelectionBox(doc) {
     var box = doc.getElementById('designstudio-selection-box');
     if (box) return box;
@@ -82,6 +87,21 @@
     return el.getAttribute(name) || '';
   }
 
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function pxToNumber(value, fallback) {
+    var n = parseFloat(value);
+    if (isNaN(n)) return fallback;
+    return n;
+  }
+
   function updateSelectionBox(el) {
     var doc = iframeDocument();
     if (!doc || !el) return;
@@ -99,10 +119,14 @@
   }
 
   function showSelectedInfo(el) {
-    if (!el) return;
+    if (!el) {
+      writeSelectedHtml('Aucun objet sélectionné.');
+      return;
+    }
 
     var rect = el.getBoundingClientRect();
     var style = el.ownerDocument.defaultView.getComputedStyle(el);
+    var moved = el.getAttribute('data-designstudio-visual-moved') === '1';
 
     var html = '';
     html += '<div class="designstudio-selected-title">Objet sélectionné</div>';
@@ -114,20 +138,10 @@
     html += '<div class="designstudio-kv"><b>eqLogic ID</b><span>' + (getAttr(el, 'data-eqlogic_id') || getAttr(el, 'data-eqlogic-id') || '—') + '</span></div>';
     html += '<div class="designstudio-kv"><b>cmd ID</b><span>' + (getAttr(el, 'data-cmd_id') || getAttr(el, 'data-cmd-id') || '—') + '</span></div>';
     html += '<div class="designstudio-kv"><b>Classes</b><span>' + escapeHtml(el.className || '—') + '</span></div>';
+    html += '<div class="designstudio-kv"><b>Déplacé</b><span>' + (moved ? 'Oui, visuel uniquement' : 'Non') + '</span></div>';
 
-    var selected = qs('#designstudio_selected_info');
-    if (selected) selected.innerHTML = html;
-
+    writeSelectedHtml(html);
     openPanel();
-  }
-
-  function escapeHtml(text) {
-    return String(text)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 
   function selectElement(el) {
@@ -137,13 +151,8 @@
   }
 
   function findStudioTarget(start) {
-    if (!start) return null;
-
-    if (start.closest) {
-      return start.closest('.postitdesign-widget, .eqLogic-widget, .cmd-widget');
-    }
-
-    return null;
+    if (!start || !start.closest) return null;
+    return start.closest('.postitdesign-widget, .eqLogic-widget, .cmd-widget');
   }
 
   function installSelectionHandlers() {
@@ -164,7 +173,7 @@
     doc.body.setAttribute('data-designstudio-selection-installed', '1');
     selectionEnabled = true;
 
-    doc.addEventListener('click', function (ev) {
+    function onPick(ev) {
       if (!selectionEnabled) return;
 
       var target = findStudioTarget(ev.target);
@@ -173,29 +182,17 @@
       stop(ev);
       selectElement(target);
       return false;
-    }, true);
+    }
 
-    doc.addEventListener('touchend', function (ev) {
-      if (!selectionEnabled) return;
+    doc.addEventListener('click', onPick, true);
 
-      var target = findStudioTarget(ev.target);
-      if (!target) return;
+    try {
+      doc.addEventListener('touchend', onPick, { capture: true, passive: false });
+    } catch (e) {
+      doc.addEventListener('touchend', onPick, true);
+    }
 
-      stop(ev);
-      selectElement(target);
-      return false;
-    }, { capture: true, passive: false });
-
-    doc.addEventListener('pointerup', function (ev) {
-      if (!selectionEnabled) return;
-
-      var target = findStudioTarget(ev.target);
-      if (!target) return;
-
-      stop(ev);
-      selectElement(target);
-      return false;
-    }, true);
+    doc.addEventListener('pointerup', onPick, true);
 
     writeScan('Mode sélection actif : clique un objet dans le Design.');
     openPanel();
@@ -219,6 +216,32 @@
     openPanel();
   }
 
+  function nudgeSelected(dx, dy) {
+    if (!selectedElement) {
+      writeSelectedHtml('Aucun objet sélectionné. Clique Scan puis sélectionne un objet.');
+      openPanel();
+      return;
+    }
+
+    var win = selectedElement.ownerDocument.defaultView;
+    var style = win.getComputedStyle(selectedElement);
+
+    if (style.position === 'static') {
+      selectedElement.style.position = 'relative';
+    }
+
+    var left = pxToNumber(style.left, selectedElement.offsetLeft || 0);
+    var top = pxToNumber(style.top, selectedElement.offsetTop || 0);
+
+    selectedElement.style.left = Math.round(left + dx) + 'px';
+    selectedElement.style.top = Math.round(top + dy) + 'px';
+    selectedElement.setAttribute('data-designstudio-visual-moved', '1');
+
+    updateSelectionBox(selectedElement);
+    showSelectedInfo(selectedElement);
+    writeScan('Déplacement visuel : ' + dx + ' / ' + dy + ' px. Non enregistré.');
+  }
+
   function toggleGrid() {
     var grid = qs('#designstudio_grid_overlay');
     if (grid) grid.classList.toggle('is-visible');
@@ -231,6 +254,7 @@
       iframe.contentWindow.location.reload();
       window.setTimeout(function () {
         writeScan('Design rechargé. Relance Scan pour sélectionner.');
+        writeSelectedHtml('Aucun objet sélectionné.');
       }, 500);
     }
   }
@@ -253,14 +277,30 @@
     });
   }
 
+  function bindNudgeTools() {
+    document.querySelectorAll('[data-nudge-dx][data-nudge-dy]').forEach(function (btn) {
+      btn.addEventListener('click', function (ev) {
+        stop(ev);
+
+        var dx = parseInt(btn.getAttribute('data-nudge-dx') || '0', 10);
+        var dy = parseInt(btn.getAttribute('data-nudge-dy') || '0', 10);
+
+        nudgeSelected(dx, dy);
+        return false;
+      }, false);
+    });
+  }
+
   function boot() {
     bindDock();
+    bindNudgeTools();
 
     var iframe = iframeElement();
     if (iframe) {
       iframe.addEventListener('load', function () {
         selectedElement = null;
         writeScan('Design chargé. Clique Scan pour activer la sélection.');
+        writeSelectedHtml('Aucun objet sélectionné.');
       });
     }
   }

@@ -60,6 +60,25 @@ try {
       <div class="designstudio-line" id="designstudio_scan_result">Scan non lancé</div>
       <div class="designstudio-line">Clique Scan, puis clique un objet du Design.</div>
       <div class="designstudio-line" id="designstudio_selected_info">Aucun objet sélectionné.</div>
+
+      <div class="designstudio-line designstudio-nudge-block">
+        <!-- DESIGNSTUDIO_VISUAL_NUDGE_UI_V1 -->
+        <div class="designstudio-tool-title">Déplacement visuel</div>
+        <div class="designstudio-nudge-grid">
+          <span></span>
+          <button type="button" data-nudge-dx="0" data-nudge-dy="-10">↑</button>
+          <span></span>
+
+          <button type="button" data-nudge-dx="-10" data-nudge-dy="0">←</button>
+          <button type="button" data-action="reload">Annuler</button>
+          <button type="button" data-nudge-dx="10" data-nudge-dy="0">→</button>
+
+          <span></span>
+          <button type="button" data-nudge-dx="0" data-nudge-dy="10">↓</button>
+          <span></span>
+        </div>
+        <div class="designstudio-nudge-note">Déplacement non enregistré. Annuler recharge le Design.</div>
+      </div>
     </div>
   </div>
 </div>

@@ -313,3 +313,39 @@
 .designstudio-kv span {
   word-break: break-word !important;
 }
+
+/* DESIGNSTUDIO_VISUAL_NUDGE_CSS_V1 */
+.designstudio-tool-title {
+  font-weight: 800 !important;
+  margin-bottom: 10px !important;
+}
+
+.designstudio-nudge-grid {
+  display: grid !important;
+  grid-template-columns: 54px 54px 54px !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+.designstudio-nudge-grid button {
+  height: 44px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: #2f80ed !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  font-size: 16px !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+}
+
+.designstudio-nudge-grid button[data-action="reload"] {
+  background: #555 !important;
+  font-size: 12px !important;
+}
+
+.designstudio-nudge-note {
+  margin-top: 10px !important;
+  font-size: 12px !important;
+  opacity: .65 !important;
+}
