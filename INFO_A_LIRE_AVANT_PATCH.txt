@@ -1,0 +1,144 @@
+# INFO A LIRE AVANT PATCH - Design Studio
+
+Date mise à jour : 20260507_075537
+Repo local DEV : /var/www/html/plugins/designstudio
+Repo GitHub : git@github.com:Gruikgroin67/design-studio.git
+Branche : main
+HEAD au moment de cette mise à jour : f67c807
+Dernier tag connu : v0.1.0
+
+## Objectif du plugin
+
+Design Studio est un plugin Jeedom séparé de Post-it Design.
+
+But : créer une interface moderne de travail sur les Designs Jeedom :
+- page Studio dédiée ;
+- Design chargé dans une iframe ;
+- dock bas ;
+- panneau latéral ;
+- scan des objets ;
+- sélection au clic gauche ;
+- multi-sélection ;
+- alignement ;
+- déplacement visuel ;
+- sauvegarde des positions dans les lignes plan Jeedom.
+
+Le plugin ne doit PAS devenir une simple collection de widgets Jeedom.
+
+## Règles importantes
+
+- Ne pas modifier le plugin postitdesign.
+- Ne pas modifier PROD.
+- Ne pas toucher MQTT.
+- Ne pas redémarrer Apache.
+- Ne pas patcher le core Jeedom.
+- Ne pas injecter de code dans footer.php ou autre fichier core.
+- Ne pas utiliser /var/www/html/core/js/custom.js comme loader durable.
+- Toute fonction doit rester isolée dans /var/www/html/plugins/designstudio.
+- Toute étape doit avoir backup + commit Git.
+- Avant tag, ce fichier doit être mis à jour.
+
+## Architecture retenue
+
+Le bon modèle retenu est :
+
+1. Page admin Design Studio :
+   /index.php?v=d&m=designstudio&p=designstudio
+
+2. Page Studio dédiée :
+   /index.php?v=d&m=designstudio&p=studio&plan_id=XX
+
+3. Le Design Jeedom est chargé dans une iframe.
+
+4. Le Studio lit les objets du Design dans l’iframe :
+   - .eqLogic-widget
+   - .cmd-widget
+   - .postitdesign-widget
+
+5. Les modifications sont d’abord visuelles, puis sauvegardées via AJAX dans les lignes plan Jeedom.
+
+## Fonctions validées ou à conserver
+
+À conserver comme base utile :
+
+- Page Studio dédiée.
+- Scan des objets du Design.
+- Sélection au clic gauche.
+- Blocage du clic droit Jeedom dans le mode sélection Studio.
+- Multi-sélection.
+- Alignement gauche / haut / droite / bas.
+- Déplacement avec flèches.
+- Enregistrement de la position d’un objet.
+- Enregistrement de la sélection.
+- Grille dans l’iframe, limitée au Design.
+
+## Fonctions problématiques / à reprendre proprement
+
+La fonction "Répartir horizontal / vertical" a posé problème.
+
+Ne pas continuer à empiler des patchs dessus sans audit.
+Si elle casse la sélection ou le JS, revenir à l’état stable avant cette fonction.
+
+État stable connu avant chantier répartition :
+- commit f67c807
+- fonctions : sélection clic gauche + multi-sélection + alignement + sauvegarde.
+
+## Décisions produit
+
+Design Studio doit apporter une vraie valeur par rapport au mode édition Jeedom natif.
+
+Fonctions vraiment utiles à développer ensuite :
+- alignement multi-objets fiable ;
+- même largeur ;
+- même hauteur ;
+- même taille ;
+- grille/snap ;
+- duplication contrôlée ;
+- verrouillage ;
+- annuler dernière action ;
+- historique court ;
+- sauvegarde groupée fiable.
+
+## À ne pas refaire
+
+- Ne pas créer de faux widget "Design Studio - Toolbar" dans les Designs.
+- Ne pas injecter une toolbar globale via custom.js.
+- Ne pas patcher footer.php.
+- Ne pas développer une fonction trop complexe sans stabiliser la base.
+- Ne pas ajouter plusieurs nouveautés en même temps.
+
+## Procédure de test minimale avant tag
+
+1. Ouvrir Design Studio.
+2. Ouvrir un Design dans Studio.
+3. Cliquer Reload.
+4. Cliquer Scan.
+5. Sélectionner un objet au clic gauche.
+6. Déplacer avec les flèches.
+7. Enregistrer position.
+8. Reload.
+9. Vérifier que l’objet reste à sa nouvelle position.
+10. Activer multi-sélection.
+11. Sélectionner au moins deux objets.
+12. Tester aligner gauche ou haut.
+13. Enregistrer sélection.
+14. Reload.
+15. Vérifier que l’alignement reste.
+
+## Commandes utiles
+
+Repo :
+cd /var/www/html/plugins/designstudio
+
+Logs :
+ls -lt /tmp/designstudio_bashlogs | head
+
+État Git :
+git status --short
+git log --oneline -10
+git tag --sort=v:refname
+
+Rollback stable avant répartition :
+git reset --hard f67c807
+git clean -fd
+
