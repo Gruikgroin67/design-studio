@@ -166,3 +166,52 @@ Avant chaque tag, ce fichier doit être mis à jour avec un résumé complet et 
 But : garder un suivi complet du projet dans le dépôt, sans dépendre uniquement de l’historique ChatGPT.
 
 Règle importante : ne jamais taguer si ce fichier n’a pas été relu et complété avec les éléments importants de la conversation en cours.
+
+## SUIVI_TAG_V0.1.2
+
+Date : 20260507_080008
+
+### Objectif de ce tag
+
+Tag de consolidation documentaire après v0.1.1.
+
+Ce tag ne correspond pas à une nouvelle fonction métier de Design Studio, mais à l’ajout d’une règle de suivi obligatoire pour les futurs tags.
+
+### Décision importante ajoutée
+
+Avant chaque tag, le fichier INFO_A_LIRE_AVANT_PATCH.txt doit être mis à jour avec le suivi complet de la conversation depuis le tag précédent.
+
+Ce suivi doit inclure :
+- objectifs demandés ;
+- décisions prises ;
+- fonctions ajoutées ;
+- bugs rencontrés ;
+- correctifs appliqués ;
+- erreurs à ne pas refaire ;
+- tests validés et non validés ;
+- état stable connu ;
+- commits et tags ;
+- règles de reprise.
+
+### État fonctionnel conservé
+
+Base Design Studio à conserver :
+- page Studio dédiée ;
+- scan des objets ;
+- sélection clic gauche ;
+- blocage du clic droit Jeedom en mode sélection ;
+- multi-sélection ;
+- alignement gauche / haut / droite / bas ;
+- déplacement visuel ;
+- sauvegarde position ;
+- sauvegarde sélection ;
+- grille dans l’iframe limitée au Design.
+
+### Point à surveiller
+
+La fonction Répartir horizontal / vertical reste considérée comme problématique. Ne pas reprendre cette fonction sans audit JS propre.
+
+### Règle de reprise
+
+Reprendre le développement à partir de ce tag seulement si la page Studio fonctionne encore sur DEV.
+
