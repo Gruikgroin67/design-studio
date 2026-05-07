@@ -142,3 +142,27 @@ Rollback stable avant répartition :
 git reset --hard f67c807
 git clean -fd
 
+
+## REGLE_SUIVI_CONVERSATION_AVANT_TAG
+
+Avant chaque tag, ce fichier doit être mis à jour avec un résumé complet et exploitable de la conversation depuis le tag précédent.
+
+À ajouter systématiquement :
+- objectifs demandés par Emmanuel ;
+- décisions prises ;
+- fonctions ajoutées ;
+- fonctions supprimées ou abandonnées ;
+- bugs rencontrés ;
+- erreurs à ne pas refaire ;
+- correctifs appliqués ;
+- tests demandés ;
+- tests validés ;
+- tests non validés ;
+- état stable connu ;
+- commit HEAD ;
+- tag créé ;
+- règles de reprise pour un nouveau chat.
+
+But : garder un suivi complet du projet dans le dépôt, sans dépendre uniquement de l’historique ChatGPT.
+
+Règle importante : ne jamais taguer si ce fichier n’a pas été relu et complété avec les éléments importants de la conversation en cours.
