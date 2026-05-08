@@ -215,3 +215,78 @@ La fonction Répartir horizontal / vertical reste considérée comme problémati
 
 Reprendre le développement à partir de ce tag seulement si la page Studio fonctionne encore sur DEV.
 
+
+## SUIVI_TAG_V0_1_3
+
+Date : 20260508_101144
+
+### Objectif de ce tag
+
+Tag de stabilisation après correction de la sauvegarde des positions.
+
+### Problème corrigé
+
+Les objets déplacés dans Design Studio revenaient à leur ancien emplacement après Reload ou actualisation.
+
+Cause probable : la position visuelle était bien modifiée côté navigateur, mais la persistance dans la ligne plan Jeedom n’était pas suffisamment vérifiée.
+
+### Correctif appliqué
+
+- Renforcement de l’action AJAX savePosition.
+- Lecture de l’ancienne position.
+- Écriture des nouvelles coordonnées left/top.
+- Relecture de la ligne plan après sauvegarde.
+- Forçage direct de la colonne plan.position si la méthode Jeedom ne persiste pas correctement.
+- Ajout d’un log runtime : /tmp/designstudio_save_position.log.
+- Contrôle de réponse AJAX côté JS : la réussite n’est acceptée que si Jeedom renvoie state=ok.
+- Nettoyage des permissions Git des fichiers suivis.
+
+### Tests validés
+
+Test utilisateur validé :
+- ouverture Design Studio ;
+- Scan ;
+- sélection d’un objet ;
+- déplacement ;
+- Enregistrer position ;
+- actualisation / Reload ;
+- l’objet reste au nouvel emplacement.
+
+### État stable connu
+
+HEAD avant création du tag : e214232
+
+Fonctions stables à conserver :
+- page Studio dédiée ;
+- Design chargé dans iframe ;
+- scan des objets ;
+- sélection clic gauche ;
+- blocage du clic droit Jeedom en mode sélection ;
+- grille limitée au Design ;
+- déplacement visuel ;
+- sauvegarde position persistante ;
+- multi-sélection ;
+- alignement gauche / haut / droite / bas ;
+- sauvegarde sélection.
+
+### Points à surveiller
+
+- Ne pas reprendre Répartir horizontal / vertical sans audit JS propre.
+- Ne pas toucher Post-it Design.
+- Ne pas toucher PROD.
+- Ne pas toucher MQTT.
+- Ne pas redémarrer Apache.
+- Ne pas patcher le core Jeedom.
+- Continuer avec une seule fonction par patch.
+
+### Suite recommandée
+
+Prochaine fonction conseillée : Même largeur sur sélection multiple.
+Puis : Même hauteur.
+Puis : Même taille.
+Puis seulement : snap grille.
+
+### Règle de reprise
+
+Reprendre depuis v0.1.3 uniquement si la sauvegarde position reste validée sur DEV.
+

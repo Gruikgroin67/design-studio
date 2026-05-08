@@ -15,3 +15,12 @@
 - Ajout du suivi documentaire obligatoire avant chaque tag.
 - Ajout d’une section de reprise dans INFO_A_LIRE_AVANT_PATCH.txt.
 - Aucun changement fonctionnel volontaire sur le moteur Studio.
+
+## v0.1.3 - 20260508_101144
+- Stabilisation de la sauvegarde des positions dans Design Studio.
+- Correction de la persistance des coordonnées left/top après Reload ou actualisation.
+- Ajout d’un contrôle de réponse AJAX côté JS.
+- Ajout d’un log runtime /tmp/designstudio_save_position.log pour diagnostiquer les sauvegardes.
+- Nettoyage des permissions Git des fichiers suivis en 0644.
+- État testé par Emmanuel : déplacement puis enregistrement fonctionnel, les objets restent au nouvel emplacement après actualisation.
+
