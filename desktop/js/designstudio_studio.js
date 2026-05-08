@@ -777,9 +777,15 @@
         dataType: 'json',
         cache: false,
         global: false,
-        success: function () {
+        /* DESIGNSTUDIO_SAVE_POSITION_RESPONSE_CHECK_V1 */
+        success: function (response) {
+          if (!response || response.state !== 'ok') {
+            reject('Réponse Jeedom KO : ' + (response && response.result ? JSON.stringify(response.result).slice(0, 220) : 'réponse vide'));
+            return;
+          }
+
           el.setAttribute('data-designstudio-visual-moved', '0');
-          resolve(true);
+          resolve(response.result || true);
         },
         error: function (xhr) {
           reject(xhr && xhr.responseText ? xhr.responseText.slice(0, 220) : 'réponse vide');
